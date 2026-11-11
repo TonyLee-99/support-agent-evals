@@ -21,7 +21,12 @@ embed = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.7", "mypy>=1.13"]
+dev = [
+    "pytest>=8",
+    "ruff>=0.7",
+    "mypy>=1.13",
+    "playwright==1.64.1",
+]
 
 [tool.uv.sources]
 tau2 = { path = "third_party/tau2-bench", editable = true }
