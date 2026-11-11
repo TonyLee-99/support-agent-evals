@@ -54,14 +54,21 @@ def tau2_pair(base: str, cand: str, k: int) -> dict[str, Any]:
     return out
 
 
-def tau2() -> None:
-    test = tau2_pair("llm_agent_test10_api", "policy_agent_test10_api", 2)
-    test["differences_from_leaderboard"] = [
+DIFFS = [
         "agent model claude-haiku-5-5 (leaderboard: various)", "user simulator claude-haiku-5-5 (leaderboard: gpt-4.1)",
         "NL-assertion grader claude-haiku-5-5 (tau2 default: gpt-5.4-mini)",
-        "10 of the 40 official retail test tasks (frozen random order), k=2 (leaderboard: 114 tasks, k=4)",
+        "{n} of the 40 official retail test tasks (frozen random order), k={k} (leaderboard: 114 tasks, k=4)",
         "tool calling via a JSON 'respond' tool on the Messages API (not native per-tool function calling)",
-    ]
+]
+
+
+def tau2() -> None:
+    # the 10x2 run is kept as history; the headline is the largest completed run
+    sizes = [(10, 2)] + ([(40, 3)] if (R / "tau2" / "policy_agent_test40_api" / "sims.jsonl.gz").exists() else [])
+    for n, k in sizes:
+        test = tau2_pair(f"llm_agent_test{n}_api", f"policy_agent_test{n}_api", k)
+        test["differences_from_leaderboard"] = [d.format(n=n, k=k) for d in DIFFS]
+        (R / f"tau2_test{n}_summary.json").write_text(json.dumps(test, indent=1))
     (R / "tau2_test_summary.json").write_text(json.dumps(test, indent=1))
     dev = tau2_pair("llm_agent_dev10", "policy_agent_dev10", 1)
     (R / "tau2_dev_summary.json").write_text(json.dumps(dev, indent=1))

@@ -14,10 +14,12 @@ def tau2_test() -> bool:
 
     s = json.loads((R / "tau2_test_summary.json").read_text())
     ok = True
-    for name, run in (("baseline", "llm_agent_test10_api"), ("policy_agent", "policy_agent_test10_api")):
-        fresh = summarize(successes_by_task(load_sims(R / "tau2" / run)), [1, 2])
-        ok &= fresh["pass^1"] == s["runs"][name]["pass^1"] and fresh["pass^2"] == s["runs"][name]["pass^2"]
-        ok &= fresh["n_tasks"] == 10 and fresh["n_trials_min"] == 2
+    n = s["runs"]["baseline"]["n_tasks"]
+    k = s["runs"]["baseline"]["n_trials_min"]
+    for name, run in (("baseline", f"llm_agent_test{n}_api"), ("policy_agent", f"policy_agent_test{n}_api")):
+        fresh = summarize(successes_by_task(load_sims(R / "tau2" / run)), list(range(1, k + 1)))
+        ok &= all(fresh[f"pass^{j}"] == s["runs"][name][f"pass^{j}"] for j in range(1, k + 1))
+        ok &= fresh["n_tasks"] == n and fresh["n_trials_min"] == k
         ok &= s["runs"][name]["config"]["split"] == "test"
     frozen = set(json.loads((R / "splits/frozen_test.json").read_text())["task_ids"])
     ok &= set(s["runs"]["baseline"]["config"]["task_ids"]) <= frozen
