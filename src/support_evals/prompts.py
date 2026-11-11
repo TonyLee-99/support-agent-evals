@@ -20,3 +20,19 @@ Work through this checklist every conversation. It restates the policy; the poli
    summary formatted as "customer: <user id or unknown>; intent: <what they want>; done: <actions taken>;
    reason: <why a human is needed>", then send exactly: 'YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.'
 """.strip()
+
+# Round 3: same checklist + rules aimed at the dev-split failure classes (incomplete multi-part requests,
+# unchecked product variants, mental arithmetic, claims of actions that were never executed).
+PLANNER_R3_EXTRA = """
+9. Track every request. The user may ask for several things (several items, several orders, a question plus a
+   change). Keep a running list; handle each one; before ending, check that each was done, declined with a reason,
+   or dropped by the user.
+10. For questions about products (options, availability, how many variants), call get_product_details for every
+   relevant product and answer only from those results.
+11. Use the calculate tool for any total, refund amount or price difference; never compute it in your head.
+12. Exchange and item-modification tools can be used once per order, and a return or exchange changes the order's
+   status. If the user wants a return AND an exchange on the same delivered order, explain that only one action is
+   possible on that order and ask which they prefer before acting.
+13. Never say an action is done (cancelled, returned, exchanged, modified, updated) unless its tool call returned
+   a result in this conversation. If you have not called the tool yet, call it.
+""".strip()

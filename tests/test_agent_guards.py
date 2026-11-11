@@ -101,3 +101,15 @@ def test_affirmation(text, ok):
 def test_fresh_affirmation_allows_lookup_after_yes():
     h = [UserMessage(role="user", content="yes"), call("get_product_details", {"product_id": "p1"}, "c"), result("c", PRODUCT)]
     assert has_fresh_affirmation(h)
+
+
+def test_claim_check_blocks_unexecuted_done_claims():
+    env = get_environment()
+    a = PolicyAgent(tools=env.get_tools(), domain_policy=env.get_policy(), llm="x", llm_args={},
+                    flags=frozenset(ALL_FLAGS) | {"planner_r3", "claim_check"})
+    claim = AssistantMessage(role="assistant", content="Your order has been cancelled.")
+    h = authed([UserMessage(role="user", content="yes")])
+    assert "no write tool call" in a.check(claim, h, None)
+    done = h + [call("cancel_pending_order", {"order_id": "#W1", "reason": "no longer needed"}, "w"), result("w", ORDER)]
+    assert a.check(claim, done, None) is None
+    assert "Track every request" in a.system_prompt

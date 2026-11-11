@@ -23,9 +23,10 @@ from tau2.data_model.message import (
 )
 from tau2.utils.llm_utils import generate
 
-from support_evals.prompts import PLANNER_INSTRUCTION
+from support_evals.prompts import PLANNER_INSTRUCTION, PLANNER_R3_EXTRA
 
 ALL_FLAGS = ("planner", "arg_check", "confirm_gate", "identity_gate", "handoff")
+R3_FLAGS = ("planner_r3", "claim_check")  # round 3 additions (opt-in; round-2 agents keep their exact prompts)
 
 WRITE_TOOLS = {
     "cancel_pending_order", "exchange_delivered_order_items", "modify_pending_order_address",
@@ -73,6 +74,25 @@ def has_fresh_affirmation(history: list[Any]) -> bool:
             return False
         if isinstance(m, UserMessage):
             return is_affirmation(m.content)
+    return False
+
+
+_DONE = re.compile(r"\b(has|have) been (cancel+ed|returned|exchanged|modified|updated|processed|changed)\b|"
+                   r"\bi(?:'ve| have) (cancel+ed|returned|exchanged|modified|updated|processed|changed)\b|"
+                   r"\b(is|are) now (cancel+ed|updated|modified)\b", re.I)
+
+
+def _claims_done(text: str | None) -> bool:
+    return bool(text and _DONE.search(text))
+
+
+def _write_since_user(history: list[Any]) -> bool:
+    """A write tool call (with its result) happened after the latest user message."""
+    for m in reversed(history):
+        if isinstance(m, UserMessage):
+            return False
+        if isinstance(m, AssistantMessage) and m.tool_calls and any(t.name in WRITE_TOOLS for t in m.tool_calls):
+            return True
     return False
 
 
@@ -135,7 +155,7 @@ def _schema_errors(call: ToolCall, schema: dict[str, Any]) -> list[str]:
 class PolicyAgent(LLMAgent):
     def __init__(self, *args: Any, flags: frozenset[str] = frozenset(ALL_FLAGS), **kwargs: Any):
         super().__init__(*args, **kwargs)
-        unknown = set(flags) - set(ALL_FLAGS)
+        unknown = set(flags) - set(ALL_FLAGS) - set(R3_FLAGS)
         if unknown:
             raise ValueError(f"unknown flags {unknown}")
         self.flags = frozenset(flags)
@@ -146,13 +166,17 @@ class PolicyAgent(LLMAgent):
     def system_prompt(self) -> str:
         if "planner" not in self.flags:
             return super().system_prompt
-        return SYSTEM_PROMPT.format(agent_instruction=AGENT_INSTRUCTION, planner=PLANNER_INSTRUCTION,
+        planner = PLANNER_INSTRUCTION + ("\n" + PLANNER_R3_EXTRA if "planner_r3" in self.flags else "")
+        return SYSTEM_PROMPT.format(agent_instruction=AGENT_INSTRUCTION, planner=planner,
                                     domain_policy=self.domain_policy)
 
     # --- guards -------------------------------------------------------------------------------------------
     def check(self, msg: AssistantMessage, history: list[Any], incoming: Any) -> str | None:
         """Return a reason string if the proposed message must not be emitted."""
         if not msg.tool_calls:
+            if "claim_check" in self.flags and _claims_done(msg.content) and not _write_since_user(history):
+                return ("you said an action is done, but no write tool call has returned since the user's last "
+                        "message; call the tool first (after confirmation) or do not claim it")
             return None
         call = msg.tool_calls[0]
         obs = observe(history)
@@ -276,7 +300,11 @@ def register_agents() -> None:
     from tau2.registry import registry
 
     variants = [frozenset(ALL_FLAGS)] + [frozenset(ALL_FLAGS) - {f} for f in ALL_FLAGS]
-    for flags in variants:
-        name = agent_name(flags)
+    named = {agent_name(f): f for f in variants}
+    r3 = frozenset(ALL_FLAGS) | set(R3_FLAGS)
+    named["policy_agent_r3"] = r3
+    named["policy_agent_r3__no_confirm_gate"] = r3 - {"confirm_gate"}
+    named["policy_agent_r3__no_claim_check"] = r3 - {"claim_check"}
+    for name, flags in named.items():
         if registry.get_agent_factory(name) is None:
             registry.register_agent_factory(make_factory(flags), name)
