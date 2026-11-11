@@ -1,0 +1,25 @@
+# harness (local only)
+AGENTS.md
+CLAUDE.md
+.claude/
+PROGRESS.md
+feature_list.json
+reviews/
+
+# local data / third-party checkout
+data/
+third_party/
+.llm_sandbox/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+node_modules/
+web/widget/dist/
+*.sqlite
+*.sqlite-journal
+.DS_Store
+cache/live/
+runs/
