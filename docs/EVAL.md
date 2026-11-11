@@ -12,7 +12,7 @@ README against them).
 | tau2 retail test split | Sierra (benchmark authors) | all 40 tasks, k=3 (earlier: 10 tasks, k=2) | `results/splits/frozen_test.json` (task hashes) + `test_order.json` (seeded order), committed before any tuning |
 | tau2 retail dev | Sierra; subset chosen by seed | 10 of 30 dev tasks, k=1 | `results/splits/dev.json`, disjoint from test |
 | own scenarios | 50 me, 50 ChatGPT via codex, blind (`scenarios/PROVENANCE.md`) | 20 run (10+10, `run_order.json`) | holdout 20+20 drawn before any agent ran on scenarios (`holdout.json`, file hashes) |
-| judge calibration | sample of scenario conversations | 10 | seed 7, stratified by deterministic outcome |
+| judge calibration | all baseline + v1 scenario conversations | 40 | whole population, seed-7 order (first n=10 run kept) |
 | regression cases | generated from labelled dev failures, human-reviewed | see `results/regression/cases.jsonl` | only dev sources (test enforces) |
 
 ## 2. Setup (what differs from the leaderboard)
@@ -34,8 +34,18 @@ comparison. No leaderboard comparability is claimed.
 **tau2 retail, full official test split (40 tasks, k=3, Anthropic API, `results/tau2_test_summary.json`).**
 | agent | pass^1 [CI] | pass^2 [CI] | pass^3 [CI] | DB-only pass^1 | sims kept / planned |
 |---|---|---|---|---|---|
-| baseline `llm_agent` | 83% [73, 92] | 74% [62, 87] | 69% [54, 82] | 83% | 119 / 120 |
-| `policy_agent` | 80% [71, 89] | 71% [58, 83] | 67% [51, 82] | 81% | 119 / 120 |
+| baseline `llm_agent` | 83% [73, 92] | 74% [62, 87] | 69% [54, 82] | 83% | 119 / 120 (2 failed attempts) |
+| `policy_agent` | 80% [71, 89] | 71% [58, 83] | 67% [51, 82] | 81% | 119 / 120 (3 failed attempts) |
+
+Failed attempts vs missing simulations: each agent has one simulation that failed twice (main run + re-run of the
+same cached reply: baseline 94/2, policy 27/0, INC-9); the policy agent's third failed attempt (111/2, NL-grader
+parse error) succeeded on re-run. `failed_attempts`, `recovered_on_rerun` and `missing_sims` are in the summary.
+
+**Threats to validity.** (1) Tool calls go through a JSON `respond` wrapper, not native function calling: 31/28
+invalid agent outputs needed retries in the 40 x 3 run, and 212 API replies across all runs were mapped from direct
+tool_use; scores are specific to this interface. (2) One model (`claude-haiku-5-5`) plays agent, customer, NL grader
+and scenario judge. Next experiment: native tool calling + a different-family user simulator on 40 x 3, ~$2.0-2.5
+on Haiku 5.5 for the tool-calling part.
 
 Paired pass^1 difference -2 pts, CI [-8, +4]; 6 tasks better, 7 worse, 27 same. pass^2 -3 pts [-14, +8];
 pass^3 -5 pts [-18, +11] (38 tasks with 3 trials for both). **No measurable lift.** The preregistered 10-task x
@@ -46,7 +56,7 @@ simulation to an adapter failure (INC-9): discarded, not scored, task left out o
 Why the guards did not help here: the confirmation gate fired 34 times in 119 policy-agent simulations, but
 tau2's simulated customers confirm readily, so blocking an early write mostly adds a turn. 17 of the 44 failed test
 simulations are labelled `user_sim_error` (`results/flywheel/test_taxonomy_descriptive.json`, descriptive only). Dev (10 tasks, k=1, CLI):
-60% -> 80% (`results/tau2_dev_summary.json`). Ablations (dev, exploratory): minus checklist 60%, minus
+60% -> 80% (`results/tau2_dev_summary.json`). Ablations (dev, directional only - 10 tasks x 1 trial, every CI includes 0): minus checklist 60%, minus
 confirmation gate 70%, minus arg_check / identity_gate / handoff 80% (= full). Guard-only variants share every LLM
 draw with the full agent until a guard fires (identical prompts -> identical cache keys), so their differences
 isolate the guard; most guards never fired on these 10 tasks.
@@ -65,10 +75,12 @@ invented tool outages -> traced to the CLI adapter (INCIDENTS INC-8), fixed in v
 premature_end 1. Largest embedding cluster (19): returns/exchanges handled partly or refused. Reported, not used for
 tuning; they would feed the next version only.
 
-**Judge calibration (`results/judge_calibration.json`).** n=10; judge vs each grader 90% agreement (CI 70-100%), kappa 0.74
-(CI 0.00-1.00); graders agree 100%. Per dimension: policy 90%, goal 90%, tone 100%. One disagreement (judge
-stricter on refusal wording), resolved for the graders. Graders are a fresh Claude grader and ChatGPT (codex);
-neither is a human support expert, and codex also wrote half the scenarios.
+**Judge calibration (`results/judge_calibration.json`).** n=40: every conversation of the baseline and v1
+scenario runs. Judge vs each grader: 90% agreement (CI 80-98%), kappa 0.79 (CI 0.56-0.95); graders agree 100%.
+4 disagreements, all resolved for the unanimous graders (judge stricter in 3, more lenient in 1). The earlier
+n=10 calibration (kappa 0.74, CI 0.00-1.00, `judge_calibration_n10.json`) was uninformative at that size. Graders are
+a fresh Claude grader and ChatGPT (codex); neither is a human support expert, and codex also wrote half the
+scenarios. No API calls: graders ran on subscriptions and the judge verdicts were already recorded.
 
 **Regression gate (`results/regression/report_*.json`).** 17 service cases x 3 fresh draws, all must pass:
 v1 0.71, v2 0.65, v3 0.94, broken 0.53 -> gate ships v3.
