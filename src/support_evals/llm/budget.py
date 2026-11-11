@@ -17,7 +17,7 @@ from typing import Any
 from support_evals.llm.base import LLMError
 
 LEDGER = Path(os.environ.get("SE_BUDGET_LEDGER", str(Path.home() / ".agent-budget" / "anthropic_ledger.jsonl")))
-CAP_USD = float(os.environ.get("SE_BUDGET_CAP_USD", "4.50"))  # raised from 3.50 for round 3 (owner)
+CAP_USD = float(os.environ.get("SE_BUDGET_CAP_USD", "3.50"))  # round 3 needed no API test run (dev gate NO-GO)
 PROJECT = "support-agent-evals"
 
 # Claude Haiku 5.5 list prices, USD per million tokens (Anthropic pricing table, prompts <= 100K tokens):
