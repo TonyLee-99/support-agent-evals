@@ -141,7 +141,7 @@ committed `results/tau2/*/sims.jsonl.gz` and checks them against the summary fil
 
 ## 9. Changes after design review (2026-11-11)
 
-An independent review (codex) found real problems; accepted fixes:
+An independent review found real problems; accepted fixes:
 - **No test contamination.** The flywheel only consumes dev-split and own-dev-scenario failures. The final agent is
   frozen (fingerprint committed) before its test run. Test failures are labelled descriptively and feed the *next*
   version only.
