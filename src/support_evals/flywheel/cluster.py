@@ -44,8 +44,8 @@ def purity(clusters: list[int], labels: list[str]) -> float:
     return tot / len(labels)
 
 
-def main() -> int:
-    rows = [json.loads(line) for line in (OUT / "labels.jsonl").read_text().splitlines()]
+def main(labels: str = "labels.jsonl", out_name: str = "taxonomy.json") -> int:
+    rows = [json.loads(line) for line in (OUT / labels).read_text().splitlines()]
     rows = [r for r in rows if r["label"].get("root_cause")]
     texts = [r["label"]["root_cause"] for r in rows]
     cats = [r["label"]["category"] for r in rows]
@@ -68,10 +68,12 @@ def main() -> int:
     out = {"n_failures": len(rows), "k": k, "embedding_model": MODEL, "purity_vs_codebook": round(purity(cl, cats), 3),
            "category_counts": dict(Counter(cats)), "by_agent_version": {a: dict(c) for a, c in by_agent.items()},
            "clusters": sorted(clusters, key=lambda x: -x["size"])}
-    (OUT / "taxonomy.json").write_text(json.dumps(out, indent=1))
+    (OUT / out_name).write_text(json.dumps(out, indent=1))
     print(f"{len(rows)} failures, {k} clusters, purity {out['purity_vs_codebook']}")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import sys
+
+    raise SystemExit(main(*sys.argv[1:3]) if len(sys.argv) > 2 else main())

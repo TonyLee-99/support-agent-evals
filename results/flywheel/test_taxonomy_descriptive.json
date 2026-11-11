@@ -1,0 +1,231 @@
+{
+ "n_failures": 44,
+ "k": 7,
+ "embedding_model": "BAAI/bge-small-en-v1.5",
+ "purity_vs_codebook": 0.455,
+ "category_counts": {
+  "incomplete_action": 9,
+  "user_sim_error": 17,
+  "wrong_info": 2,
+  "policy_violation": 1,
+  "false_refusal": 7,
+  "hallucinated_fact": 3,
+  "wrong_args": 2,
+  "harness_error": 2,
+  "premature_end": 1
+ },
+ "by_agent_version": {
+  "llm_agent": {
+   "incomplete_action": 4,
+   "user_sim_error": 9,
+   "wrong_info": 2,
+   "policy_violation": 1,
+   "false_refusal": 3,
+   "hallucinated_fact": 1,
+   "wrong_args": 1
+  },
+  "policy_agent": {
+   "incomplete_action": 5,
+   "user_sim_error": 8,
+   "false_refusal": 4,
+   "wrong_args": 1,
+   "harness_error": 2,
+   "hallucinated_fact": 2,
+   "premature_end": 1
+  }
+ },
+ "clusters": [
+  {
+   "cluster": 2,
+   "size": 19,
+   "top_terms": [
+    "return",
+    "exchange",
+    "customer",
+    "refund"
+   ],
+   "labels": {
+    "incomplete_action": 5,
+    "wrong_info": 1,
+    "policy_violation": 1,
+    "false_refusal": 5,
+    "user_sim_error": 6,
+    "premature_end": 1
+   },
+   "examples": [
+    "The agent submitted the irreversible exchange even though the customer had said \"for now\" about the second item and had not been told that the exchange would block a return of that item. The agent should have asked about the remaining item's disposition (keep, exchange, or return) before submitting the one-time exchange.",
+    "The agent submitted the return for the delivered order before the requested exchange, which changed the order status to \"return requested\" and made the exchange impossible. It had also told the customer both changes would go in one request, which no tool supported. The agent should have processed the exchange first, or only proceeded after confirming the sequencing.",
+    "The agent summed the new item prices without calculating them (it omitted the Backpack), then stated a wrong new total ($937.47) and refund ($229.51) as fact. The customer approved the item changes based on that incorrect total, and the order ended up still above the $950 limit."
+   ],
+   "sources": [
+    "tau2:llm_agent_test40_api:5:0",
+    "tau2:llm_agent_test40_api:27:0",
+    "tau2:llm_agent_test40_api:38:0",
+    "tau2:llm_agent_test40_api:100:0",
+    "tau2:llm_agent_test40_api:108:0",
+    "tau2:llm_agent_test40_api:5:1",
+    "tau2:llm_agent_test40_api:27:2",
+    "tau2:llm_agent_test40_api:38:2",
+    "tau2:llm_agent_test40_api:60:2",
+    "tau2:llm_agent_test40_api:108:2",
+    "tau2:policy_agent_test40_api:5:0",
+    "tau2:policy_agent_test40_api:32:0",
+    "tau2:policy_agent_test40_api:108:0",
+    "tau2:policy_agent_test40_api:5:1",
+    "tau2:policy_agent_test40_api:38:1",
+    "tau2:policy_agent_test40_api:12:2",
+    "tau2:policy_agent_test40_api:5:2",
+    "tau2:policy_agent_test40_api:32:2",
+    "tau2:policy_agent_test40_api:27:2"
+   ]
+  },
+  {
+   "cluster": 6,
+   "size": 11,
+   "top_terms": [
+    "address",
+    "address change",
+    "change",
+    "update"
+   ],
+   "labels": {
+    "user_sim_error": 6,
+    "incomplete_action": 3,
+    "false_refusal": 2
+   },
+   "examples": [
+    "The simulated customer supplied a street address (4812 East Cactus Road) that differs from the scenario's expected new address (157 Oak Street, Suite 258), which caused the database mismatch. The agent confirmed and applied the address the customer actually gave, so the failure originates in the simulated customer's deviation rather than the agent.",
+    "The customer explicitly asked for two changes on the same pending order, but the agent executed the item modification first. That made the order \"pending (item modified)\", which blocked the requested shipping address change, so the second request was never completed. The agent should have applied the address change before the one-time item modification.",
+    "The agent wrongly rejected using the NYC address already on the customer's account from a delivered order, conflating that order's immutability with the address itself being unusable as a new shipping address. This forced the privacy-conscious customer to re-type the address, and the laptop address change never went through."
+   ],
+   "sources": [
+    "tau2:llm_agent_test40_api:39:0",
+    "tau2:llm_agent_test40_api:97:0",
+    "tau2:llm_agent_test40_api:111:0",
+    "tau2:llm_agent_test40_api:39:1",
+    "tau2:llm_agent_test40_api:39:2",
+    "tau2:policy_agent_test40_api:39:0",
+    "tau2:policy_agent_test40_api:111:0",
+    "tau2:policy_agent_test40_api:39:1",
+    "tau2:policy_agent_test40_api:39:2",
+    "tau2:policy_agent_test40_api:102:2",
+    "tau2:policy_agent_test40_api:111:2"
+   ]
+  },
+  {
+   "cluster": 0,
+   "size": 7,
+   "top_terms": [
+    "4k",
+    "variant",
+    "4k waterproof",
+    "waterproof"
+   ],
+   "labels": {
+    "user_sim_error": 4,
+    "wrong_info": 1,
+    "wrong_args": 1,
+    "harness_error": 1
+   },
+   "examples": [
+    "The simulated customer chose the 4K waterproof silver variant (item 6117189161) after the agent listed both 4K options. The evaluator expected the black variant (item 6700049080), so the customer deviated from the expected choice. The agent handled the confirmed silver choice correctly.",
+    "The agent described the customer's current camera's color as silver, which led the customer to choose a silver replacement. The evaluator's expected action uses the black 4K waterproof variant, so the stated current-item attributes appear to be wrong or unsupported by the order data. The agent should only state item attributes that are confirmed in the order record.",
+    "The agent called the modify tool with a new_item_id (7661609223) that did not match the 1000ml black stainless steel variant the customer confirmed. The expected variant ID is 2439754078, so the agent did not carefully map the confirmed product attributes to the correct item_id before writing."
+   ],
+   "sources": [
+    "tau2:llm_agent_test40_api:64:0",
+    "tau2:llm_agent_test40_api:64:1",
+    "tau2:llm_agent_test40_api:79:1",
+    "tau2:llm_agent_test40_api:64:2",
+    "tau2:policy_agent_test40_api:64:0",
+    "tau2:policy_agent_test40_api:64:1",
+    "tau2:policy_agent_test40_api:64:2"
+   ]
+  },
+  {
+   "cluster": 4,
+   "size": 3,
+   "top_terms": [
+    "skateboard",
+    "luggage",
+    "carrying",
+    "price"
+   ],
+   "labels": {
+    "user_sim_error": 1,
+    "wrong_args": 1,
+    "harness_error": 1
+   },
+   "examples": [
+    "The simulated customer chose the plastic skateboard deck, but the evaluator expected the bamboo variant (item 6956751343), so the database state diverged from the expected action. The agent executed the customer's explicit, confirmed choice, and the luggage/skateboard price discrepancy in the modify tool's returned record was a separate data issue.",
+    "The agent called the pending-order modification with new variant IDs that did not match the requested red luggage set and 34-inch custom skateboard, and it did not verify the mapping before the irreversible one-time write. The resulting record has the luggage item carrying skateboard options and the skateboard carrying the luggage price, and the boots return was then left unsubmitted.",
+    "The order-modification tool returned the luggage line carrying skateboard options and a $217.06 price, even though the agent's call paired each old item with the correct new item ID. The fault is in the tool or backend data, not the agent's arguments, and it blocked the confirmed outcome, so the boot return was never submitted."
+   ],
+   "sources": [
+    "tau2:llm_agent_test40_api:100:1",
+    "tau2:policy_agent_test40_api:100:0",
+    "tau2:policy_agent_test40_api:100:1"
+   ]
+  },
+  {
+   "cluster": 1,
+   "size": 2,
+   "top_terms": [
+    "orders",
+    "cancellation",
+    "order",
+    "claim"
+   ],
+   "labels": {
+    "hallucinated_fact": 1,
+    "incomplete_action": 1
+   },
+   "examples": [
+    "The agent asserted that the order records lack dates or sequence information, a claim the truncated order-detail results do not establish. It then used that unsupported claim to refuse identifying the most recent order, so the customer never got the $829.43 amount for the latest order.",
+    "After verifying the customer, the agent looked at only one of three orders and told the customer the cancellation options without checking the other two orders, which may hold the office items the customer asked about. The cancellation request was therefore never fully investigated."
+   ],
+   "sources": [
+    "tau2:llm_agent_test40_api:68:1",
+    "tau2:policy_agent_test40_api:33:2"
+   ]
+  },
+  {
+   "cluster": 3,
+   "size": 1,
+   "top_terms": [
+    "gift",
+    "gift card",
+    "paypal",
+    "card"
+   ],
+   "labels": {
+    "hallucinated_fact": 1
+   },
+   "examples": [
+    "The agent stated refund-timing policy details (gift card refunds are immediate, PayPal takes 5 to 7 business days) that were not supported by any tool result in the transcript. The customer then chose the gift card based on this unsupported claim, which led to a payment method different from the expected PayPal refund."
+   ],
+   "sources": [
+    "tau2:policy_agent_test40_api:60:2"
+   ]
+  },
+  {
+   "cluster": 5,
+   "size": 1,
+   "top_terms": [
+    "adapter",
+    "ac adapter",
+    "adapter battery",
+    "battery"
+   ],
+   "labels": {
+    "hallucinated_fact": 1
+   },
+   "examples": [
+    "The agent told the customer that the high-brightness white lamps with AC adapter or battery power were unavailable, and then proposed the USB variant. The product lookup result does not support that claim, and the customer's stated power-source preference order (AC adapter, then battery, then USB) was not honored, so the wrong replacement item was selected for the exchange."
+   ],
+   "sources": [
+    "tau2:policy_agent_test40_api:9:2"
+   ]
+  }
+ ]
+}
