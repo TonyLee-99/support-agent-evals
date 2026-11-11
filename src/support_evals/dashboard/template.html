@@ -103,12 +103,12 @@ if (sc) {
 if (t) {
   const r = (n) => t.runs[n];
   card("span12", `<h2>What differs from the public leaderboard</h2><ul>${t.differences_from_leaderboard.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
-    <table><tr><th>run</th><th>agent</th><th>backend</th><th class="n">sims</th><th class="n">discarded (infra)</th><th class="n">DB-only pass^1</th><th class="n">mean wall s</th></tr>
-    ${["baseline", "policy_agent"].map((n) => `<tr><td>${n}</td><td>${esc(r(n).config.agent)}</td><td>${esc(r(n).config.backend)}</td><td class="n">${r(n).n_sims}</td><td class="n">${r(n).discarded_sims}</td><td class="n">${pct(r(n).db_only["pass^1"].mean)}</td><td class="n">${r(n).mean_wall_s}</td></tr>`).join("")}</table>`);
+    <table><tr><th>run</th><th>agent</th><th>backend</th><th class="n">sims</th><th class="n">kept / planned</th><th class="n">failed attempts</th><th class="n">DB-only pass^1</th><th class="n">mean wall s</th></tr>
+    ${["baseline", "policy_agent"].map((n) => `<tr><td>${n}</td><td>${esc(r(n).config.agent)}</td><td>${esc(r(n).config.backend)}</td><td class="n">${r(n).n_sims}</td><td class="n">${r(n).n_sims} / ${r(n).planned_sims}</td><td class="n">${r(n).failed_attempts}</td><td class="n">${pct(r(n).db_only["pass^1"].mean)}</td><td class="n">${r(n).mean_wall_s}</td></tr>`).join("")}</table>`);
 }
 const ab = D.ablations;
 if (ab) {
-  card("span6", `<h2>Ablations (dev, exploratory)</h2><table><tr><th>variant</th><th class="n">pass^1</th><th class="n">vs full</th></tr>
+  card("span6", `<h2>Ablations (dev, directional only)</h2><table><tr><th>variant</th><th class="n">pass^1</th><th class="n">vs full</th></tr>
     ${ab.rows.map((r) => `<tr><td>${esc(r.variant)}</td><td class="n">${r["pass^1"] ? pct(r["pass^1"].mean) : esc(r.status)}</td><td class="n">${r.vs_full ? (r.vs_full.diff >= 0 ? "+" : "") + (100 * r.vs_full.diff).toFixed(0) + " pts" : ""}</td></tr>`).join("")}</table>
     <div class="note">${esc(ab.note)}</div>`);
 }
