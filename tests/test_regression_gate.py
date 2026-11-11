@@ -48,7 +48,8 @@ def test_property_checks(prop, content, tool, ok):
 def test_replay_matches_committed_report(monkeypatch, tmp_path):
     """Offline: every approved service case replays from cache/ci to the recorded outcome."""
     monkeypatch.setenv("SE_LLM_BACKEND", "replay")
-    monkeypatch.setenv("SE_CACHE_DIR", str(tmp_path))  # only the committed cache/ci is visible, as in CI
+    if not __import__("os").environ.get("SE_CACHE_TRACE"):  # export mode reads the live cache
+        monkeypatch.setenv("SE_CACHE_DIR", str(tmp_path))  # only the committed cache/ci is visible, as in CI
     from support_evals import llm
 
     llm._clients.clear()

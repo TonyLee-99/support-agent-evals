@@ -99,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--max-steps", type=int, default=100)
     ap.add_argument("--run-id", required=True)
-    ap.add_argument("--backend", default="claude_cli", choices=["claude_cli", "anthropic"])
+    ap.add_argument("--backend", default="claude_cli", choices=["claude_cli", "anthropic", "replay"])
     args = ap.parse_args(argv)
     os.environ["SE_LLM_BACKEND"] = args.backend
     if args.backend == "anthropic":
