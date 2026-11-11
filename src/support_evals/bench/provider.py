@@ -20,6 +20,7 @@ from litellm.types.utils import ChatCompletionMessageToolCall, Function
 
 from support_evals.bench.emulation import TEXT_SCHEMA, AdapterError, parse, render, tools_schema
 from support_evals.llm import LLMError, get_client
+from support_evals.llm.budget import BudgetExceeded
 from support_evals.llm.claude_cli import UsageLimitError
 
 MAX_ADAPTER_RETRIES = 2
@@ -67,8 +68,8 @@ class ClaudeCLIProvider(CustomLLM):
             try:
                 resp = llm.complete(system, prompt, schema=schema, sample=sample, tag=f"tau2:{role}")
             except LLMError as e:
-                if isinstance(e, UsageLimitError):
-                    USAGE_LIMIT.set()
+                if isinstance(e, (UsageLimitError, BudgetExceeded)):
+                    USAGE_LIMIT.set()  # stop the whole run cleanly; never switch backend mid-comparison
                 if not hasattr(_tls, "errors"):
                     _tls.errors = []
                 _tls.errors.append(repr(e)[:300])

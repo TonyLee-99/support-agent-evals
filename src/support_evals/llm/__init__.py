@@ -30,7 +30,9 @@ def get_client(model: str = HAIKU, backend: str | None = None) -> LLMClient:
         elif b == "anthropic":
             from support_evals.llm.anthropic_api import AnthropicClient
             from support_evals.llm.claude_cli import ClaudeCLIClient
-            _clients[k] = AnthropicClient(model, cache, fallback=ClaudeCLIClient(model, cache=cache))
+            # SE_API_NO_FALLBACK=1: over the cap, fail (and stop the run) instead of silently switching to the CLI
+            fb = None if os.environ.get("SE_API_NO_FALLBACK") == "1" else ClaudeCLIClient(model, cache=cache)
+            _clients[k] = AnthropicClient(model, cache, fallback=fb)
         elif b == "claude_cli":
             from support_evals.llm.claude_cli import ClaudeCLIClient
             _clients[k] = ClaudeCLIClient(model, cache=cache)
