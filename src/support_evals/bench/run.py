@@ -25,7 +25,7 @@ RESULTS = ROOT / "results" / "tau2"
 TAU2_COMMIT = "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4"
 
 
-def setup(nl_judge_model: str) -> None:
+def setup(nl_judge_model: str, prefix: str = "claudecli") -> None:
     os.environ.setdefault("TAU2_LOG_LEVEL", "ERROR")
     from loguru import logger
 
@@ -40,7 +40,7 @@ def setup(nl_judge_model: str) -> None:
     # this is a reported difference from the leaderboard setup (docs/EVAL.md).
     import tau2.evaluator.evaluator_nl_assertions as nl
 
-    nl.DEFAULT_LLM_NL_ASSERTIONS = f"claudecli/{nl_judge_model}"
+    nl.DEFAULT_LLM_NL_ASSERTIONS = f"{prefix}/{nl_judge_model}"
     nl.DEFAULT_LLM_NL_ASSERTIONS_ARGS = {}
 
 
@@ -57,10 +57,10 @@ def run_one(task, trial: int, args) -> dict[str, Any]:
     cfg = TextRunConfig(
         domain="retail",
         agent=args.agent,
-        llm_agent=f"claudecli/{args.model}",
+        llm_agent=f"{args.prefix}/{args.model}",
         llm_args_agent={"metadata": {"trial": trial, "role": "agent"}},
         user="user_simulator",
-        llm_user=f"claudecli/{args.user_model}",
+        llm_user=f"{args.prefix}/{args.user_model}",
         llm_args_user={"metadata": {"trial": trial, "role": "user"}},
         max_steps=args.max_steps,
         seed=300 + trial,
@@ -100,7 +100,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-steps", type=int, default=100)
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--backend", default="claude_cli", choices=["claude_cli", "anthropic", "replay"])
+    ap.add_argument("--interface", default="wrapper", choices=["wrapper", "native"],
+                    help="wrapper = JSON respond schema (rounds 1-2); native = Messages-API tool_use (round 3, API only)")
     args = ap.parse_args(argv)
+    args.prefix = "claudenative" if args.interface == "native" else "claudecli"
+    if args.interface == "native" and args.backend == "claude_cli":
+        raise SystemExit("native tool calling needs --backend anthropic (or replay)")
     os.environ["SE_LLM_BACKEND"] = args.backend
     if args.backend == "anthropic":
         from support_evals.llm.budget import key_from_keychain
@@ -110,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("no API key in env or keychain")
         os.environ["ANTHROPIC_API_KEY"] = key  # process memory only; never written anywhere
 
-    setup(args.judge_model)
+    setup(args.judge_model, args.prefix)
     from tau2.runner.helpers import get_tasks
 
     from support_evals.bench.provider import STATS
@@ -146,7 +151,9 @@ def main(argv: list[str] | None = None) -> int:
         "run_id": args.run_id, "agent": args.agent, "split": args.split, "task_ids": ids,
         "trials": sorted({*meta.get("trials", []), *range(args.trial_offset, args.trial_offset + args.trials)}),
         "agent_model": args.model, "user_model": args.user_model, "nl_judge_model": args.judge_model,
-        "backend": ("claude_cli (claude -p --output-format json --json-schema)" if args.backend == "claude_cli"
+        "interface": args.interface,
+        "backend": ("anthropic Messages API, native tool_use (tools + system cached)" if args.interface == "native"
+                    else "claude_cli (claude -p --output-format json --json-schema)" if args.backend == "claude_cli"
                     else "anthropic Messages API (respond tool, cached system prefix; CLI fallback over budget)"),
         "cli_version": cli_version(),
         "tau2_commit": TAU2_COMMIT, "max_steps": args.max_steps, "domain": "retail",
@@ -191,7 +198,9 @@ def main(argv: list[str] | None = None) -> int:
                   f"term={d.get('termination_reason')} elapsed={time.time() - t_start:.0f}s", flush=True)
     meta = json.loads(meta_path.read_text())
     meta.setdefault("adapter_stats", {})
-    for k, v in STATS.items():
+    from support_evals.bench.native import STATS as NATIVE_STATS
+
+    for k, v in [*STATS.items(), *((f"native:{k}", v) for k, v in NATIVE_STATS.items())]:
         meta["adapter_stats"][k] = meta["adapter_stats"].get(k, 0) + v
     meta.setdefault("errors", []).extend(errors)
     meta_path.write_text(json.dumps(meta, indent=1))

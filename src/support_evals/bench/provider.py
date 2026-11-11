@@ -122,10 +122,12 @@ def register() -> None:
     global _registered
     if _registered:
         return
-    litellm.custom_provider_map = [{"provider": "claudecli", "custom_handler": ClaudeCLIProvider()}]
+    from support_evals.bench.native import ClaudeNativeProvider
+
+    litellm.custom_provider_map = [{"provider": "claudecli", "custom_handler": ClaudeCLIProvider()},
+                                   {"provider": "claudenative", "custom_handler": ClaudeNativeProvider()}]
     litellm.register_model({
-        f"claudecli/{m}": {"input_cost_per_token": 0.0, "output_cost_per_token": 0.0,
-                           "litellm_provider": "claudecli", "mode": "chat"}
-        for m in ("claude-haiku-5-5", "claude-sonnet-5-5")
+        f"{p}/{m}": {"input_cost_per_token": 0.0, "output_cost_per_token": 0.0, "litellm_provider": p, "mode": "chat"}
+        for m in ("claude-haiku-5-5", "claude-sonnet-5-5") for p in ("claudecli", "claudenative")
     })
     _registered = True

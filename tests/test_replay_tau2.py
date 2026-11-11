@@ -28,7 +28,7 @@ def test_recorded_simulation_replays(task_id, tmp_path, monkeypatch):
 
     setup("claude-haiku-5-5")
     task = get_tasks("retail", task_ids=[task_id])[0]
-    args = SimpleNamespace(agent="llm_agent", model="claude-haiku-5-5", user_model="claude-haiku-5-5", max_steps=100,
+    args = SimpleNamespace(agent="llm_agent", model="claude-haiku-5-5", user_model="claude-haiku-5-5", max_steps=100, prefix="claudecli",
                            run_id="replay")
     d = run_one(task, 0, args)
     assert d["reward_info"]["reward"] == rec["reward_info"]["reward"]

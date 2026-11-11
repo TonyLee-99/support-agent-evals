@@ -35,8 +35,8 @@ verify:
 
 # ---- live paths (LLM calls; outputs land in results/) ----
 tau2:
-	SE_API_NO_FALLBACK=1 SE_BUDGET_CAP_USD=3.40 uv run python -m support_evals.bench.run --agent llm_agent --split test --n $(N) --trials $(K) --backend $(BACKEND) --run-id llm_agent_test$(N)_api
-	SE_API_NO_FALLBACK=1 SE_BUDGET_CAP_USD=3.40 uv run python -m support_evals.bench.run --agent policy_agent --split test --n $(N) --trials $(K) --backend $(BACKEND) --run-id policy_agent_test$(N)_api
+	SE_API_NO_FALLBACK=1 SE_BUDGET_CAP_USD=4.40 uv run python -m support_evals.bench.run --agent llm_agent --split test --n $(N) --trials $(K) --backend $(BACKEND) --run-id llm_agent_test$(N)_api
+	SE_API_NO_FALLBACK=1 SE_BUDGET_CAP_USD=4.40 uv run python -m support_evals.bench.run --agent policy_agent --split test --n $(N) --trials $(K) --backend $(BACKEND) --run-id policy_agent_test$(N)_api
 	uv run python -m support_evals.report tau2
 
 dev:
