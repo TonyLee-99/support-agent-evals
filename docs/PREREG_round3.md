@@ -33,3 +33,14 @@ invalid-output rate and the cost per simulation before the test run.
 
 ## Freeze
 Before the test run, the agent files' sha256 are written to `results/agent_freeze_r3.json` and committed.
+
+## Amendment 1 (2026-11-11, before any round-3 test-split run): free go/no-go gate on dev
+Owner rule: no API money for the test run until a $0 dev check passes.
+- Dev comparison: `policy_agent_r3` vs `llm_agent` on the 40 `devplus` tasks (`results/splits/devplus.json`:
+  the 30 dev tasks + 10 more from tau2's train split, none in the frozen test set), k=2, both on the same
+  interface (subscription CLI, JSON wrapper - the only $0 path), at most 4 concurrent `claude -p`.
+- **GO** only if the paired pass^1 lift is >= +8 pts AND its bootstrap 95% CI lower bound is > 0. Otherwise
+  iterate on dev ($0); if no GO after reasonable effort, stop and report without any API test run.
+- Dev results are recorded in `results/round3_summary.json` whatever they are.
+- Native-interface dev checks already run before this amendment (baseline on 10 dev tasks, $0.08) are reported
+  as diagnostics only, not as part of the gate.

@@ -48,6 +48,8 @@ def load_split(name: str) -> list[str]:
         return json.loads((SPLITS_DIR / "frozen_test.json").read_text())["task_ids"]
     if name == "dev":
         return json.loads((SPLITS_DIR / "dev.json").read_text())["task_ids"]
+    if name == "devplus":
+        return json.loads((SPLITS_DIR / "devplus.json").read_text())["task_ids"]
     if name == "train_rest":
         dev = set(load_split("dev"))
         return [i for i in official_splits()["train"] if i not in dev]
