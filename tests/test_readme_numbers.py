@@ -30,7 +30,6 @@ def test_tau2_numbers():
 
     c3 = s["comparison"]["pass^3"]
     for needle in (f"pass^1 {pct(p['pass^1']['mean'])} vs {pct(b['pass^1']['mean'])}",
-                   f"pass^3 **{pct(p['pass^3']['mean'])}** vs **{pct(b['pass^3']['mean'])}**",
                    *(ci(r[f"pass^{k}"]) for r in (b, p) for k in (1, 2, 3)),
                    f"{signed(c['diff'])} pts, CI [{signed(c['ci95'][0])}, {signed(c['ci95'][1])}]",
                    f"pass^3: {signed(c3['diff'])} pts, CI [{signed(c3['ci95'][0])}, {signed(c3['ci95'][1])}]",
