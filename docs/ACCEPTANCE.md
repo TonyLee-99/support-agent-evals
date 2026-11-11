@@ -60,14 +60,14 @@ Fixed on 2026-11-11 before any agent code was written. At the end each line gets
 - Policy-violation rate on own holdout scenarios (deterministic checks): final < baseline.
 - Judge vs grader agreement: kappa >= 0.6 (report the real value regardless).
 
-## Results (2026-11-11; sizes rescoped by the owner: 10 test tasks x k=2, 20 scenarios, 10 calibration items)
+## Results (2026-11-11; tau2 re-run on the full 40-task test split, k=3; scenarios 20, calibration 10)
 
 | # | result | evidence |
 |---|---|---|
 | A1 | PASS | `scripts/check_tau2_pristine.py` (commit pinned, MIT, 10 files byte-identical) |
 | A2 | PASS | splits committed in 3c34d37 before any tuning; `tests/test_splits.py` |
 | A3 | PASS | `differences_from_leaderboard` in `results/tau2_test_summary.json`; README |
-| A4 | PASS | pass^1/pass^2 + CIs + paired difference in `results/tau2_test_summary.json` |
+| A4 | PASS | pass^1/2/3 + CIs + paired differences for 40 tasks x 3 trials in `results/tau2_test_summary.json` (10 x 2 run kept in `tau2_test10_summary.json`) |
 | A5 | PASS | baseline = unmodified `llm_agent`, same model/backend (config block) |
 | A6 | PASS | `results/ablations.json` (exploratory, k=1) |
 | A7 | PASS (narrowed) | every run is replayable from the local live cache (`data/cache`, not committed); the committed `cache/ci` holds what CI replays: one full tau2 simulation (`tests/test_replay_tau2.py`) and the whole regression suite; ledger in `results/ledger_summary.json` |
@@ -81,7 +81,8 @@ Fixed on 2026-11-11 before any agent code was written. At the end each line gets
 | C6 | PASS | taxonomy by version on the dashboard |
 | D1-D4 | PASS | `make check`; `scripts/check_dashboard.py`; `tests/test_readme_numbers.py`; `scripts/check_docs.py` |
 
-Targets: pass^1 +5 pts -> **met** (+15, paired CI lower bound 0). Service B1-B9 all pass -> **met**. Policy-violation
+Targets: pass^1 +5 pts -> **not met**: on the full split -2 pts, paired CI [-8, +4] (the +15 on the 10-task
+subset did not replicate). Service B1-B9 all pass -> **met**. Policy-violation
 rate on holdout scenarios final < baseline -> **not demonstrated**: both are 0 (no leaks, no forbidden tool calls,
 no refunds above the expected amount). The baseline's two failing holdout checks (S040 missing handoff, C043
 incomplete exchange) are task-completion failures, not policy violations; v3 passes all 11. Judge

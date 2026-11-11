@@ -9,7 +9,7 @@ README against them).
 
 | set | who wrote it | size used | frozen how |
 |---|---|---|---|
-| tau2 retail test split | Sierra (benchmark authors) | 10 of 40 tasks (`N` knob), k=2 | `results/splits/frozen_test.json` (task hashes) + `test_order.json` (seeded order), committed before any tuning |
+| tau2 retail test split | Sierra (benchmark authors) | all 40 tasks, k=3 (earlier: 10 tasks, k=2) | `results/splits/frozen_test.json` (task hashes) + `test_order.json` (seeded order), committed before any tuning |
 | tau2 retail dev | Sierra; subset chosen by seed | 10 of 30 dev tasks, k=1 | `results/splits/dev.json`, disjoint from test |
 | own scenarios | 50 me, 50 ChatGPT via codex, blind (`scenarios/PROVENANCE.md`) | 20 run (10+10, `run_order.json`) | holdout 20+20 drawn before any agent ran on scenarios (`holdout.json`, file hashes) |
 | judge calibration | sample of scenario conversations | 10 | seed 7, stratified by deterministic outcome |
@@ -31,13 +31,21 @@ comparison. No leaderboard comparability is claimed.
 
 ## 4. Results
 
-**tau2 retail test subset (10 tasks, k=2, Anthropic API, `results/tau2_test_summary.json`).**
-| agent | pass^1 [CI] | pass^2 [CI] | DB-only pass^1 | discarded sims (infra, re-run) |
-|---|---|---|---|---|
-| baseline `llm_agent` | 70% [50, 90] | 50% [20, 80] | 75% | 2 |
-| `policy_agent` | 85% [65, 100] | 80% [50, 100] | 85% | 2 |
+**tau2 retail, full official test split (40 tasks, k=3, Anthropic API, `results/tau2_test_summary.json`).**
+| agent | pass^1 [CI] | pass^2 [CI] | pass^3 [CI] | DB-only pass^1 | sims kept / planned |
+|---|---|---|---|---|---|
+| baseline `llm_agent` | 83% [73, 92] | 74% [62, 87] | 69% [54, 82] | 83% | 119 / 120 |
+| `policy_agent` | 80% [71, 89] | 71% [58, 83] | 67% [51, 82] | 81% | 119 / 120 |
 
-Paired pass^1 difference +15 pts, CI [0, +30]; 3 tasks better, 0 worse, 7 same. Dev (10 tasks, k=1, CLI):
+Paired pass^1 difference -2 pts, CI [-8, +4]; 6 tasks better, 7 worse, 27 same. pass^2 -3 pts [-14, +8];
+pass^3 -5 pts [-18, +11] (38 tasks with 3 trials for both). **No measurable lift.** The preregistered 10-task x
+2-trial run (`results/tau2_test10_summary.json`: 85% vs 70%, +15 pts, CI [0, +30]) was a seeded random subset
+drawn before tuning; its 20 simulations per agent are reused unchanged inside the 40-task run (same cache keys).
+The other 30 tasks favour the baseline slightly, so the earlier lift was small-sample noise. Each agent lost one
+simulation to an adapter failure (INC-9): discarded, not scored, task left out of pass^3 only.
+Why the guards did not help here: the confirmation gate fired 34 times in 119 policy-agent simulations, but
+tau2's simulated customers confirm readily, so blocking an early write mostly adds a turn. 17 of the 44 failed test
+simulations are labelled `user_sim_error` (`results/flywheel/test_taxonomy_descriptive.json`, descriptive only). Dev (10 tasks, k=1, CLI):
 60% -> 80% (`results/tau2_dev_summary.json`). Ablations (dev, exploratory): minus checklist 60%, minus
 confirmation gate 70%, minus arg_check / identity_gate / handoff 80% (= full). Guard-only variants share every LLM
 draw with the full agent until a guard fires (identical prompts -> identical cache keys), so their differences
@@ -52,9 +60,10 @@ invented tool outages -> traced to the CLI adapter (INCIDENTS INC-8), fixed in v
 `incomplete_action` (exchanges submitted before a return on the same order; one product id checked instead of all).
 
 **Test-split failures (descriptive only, after freeze; `results/flywheel/test_labels_descriptive.jsonl`).**
-9 failed test simulations: baseline 6 (incomplete_action, hallucinated_fact, false_refusal, wrong_args, wrong_info,
-user_sim_error - one each), policy agent 3 (incomplete_action, user_sim_error, harness_error). These are reported,
-not used: they would feed the next version only.
+44 failed simulations in the 40-task run (baseline 21, policy agent 23). Labels: user_sim_error 17, incomplete_action
+9, false_refusal 7, hallucinated_fact 3, wrong_info 2, wrong_args 2, harness_error 2, policy_violation 1,
+premature_end 1. Largest embedding cluster (19): returns/exchanges handled partly or refused. Reported, not used for
+tuning; they would feed the next version only.
 
 **Judge calibration (`results/judge_calibration.json`).** n=10; judge vs each grader 90% agreement (CI 70-100%), kappa 0.74
 (CI 0.00-1.00); graders agree 100%. Per dimension: policy 90%, goal 90%, tone 100%. One disagreement (judge
@@ -65,6 +74,7 @@ neither is a human support expert, and codex also wrote half the scenarios.
 v1 0.71, v2 0.65, v3 0.94, broken 0.53 -> gate ships v3.
 
 ## 5. Sample size, CI width, how to scale
-With 10 tasks a single task flip moves pass^1 by 5-10 points; CI half-widths are ~15-20 points. To halve the CI
-width, quadruple the tasks: `make tau2 N=40 K=4` (the full official test split; ~160 simulations per agent,
-~$0.01 each on Haiku API: $0.46 bought 40 kept + discarded simulations). Scenarios: `make scenarios SCEN_N=50` runs all 100.
+Measured: at 10 tasks the pass^1 CI half-width was ~20 points; at 40 tasks x 3 trials it is ~9 points, and the
+paired-difference CI is [-8, +4]. Cost: the 40 x 3 run cost $2.05 on Haiku 5.5 (about $0.01 per simulation; 200 new
+simulations, the 40 from the 10 x 2 run replayed from cache). K was set to 3, not 4, to stay under the $2.80
+budget for both agents. `make tau2 N=40 K=4` adds the fourth trial (~$0.85 more). Scenarios: `make scenarios SCEN_N=50` runs all 100.

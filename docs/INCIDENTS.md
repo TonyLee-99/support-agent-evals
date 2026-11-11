@@ -92,3 +92,13 @@ treating them as real tool failures and telling the customer. A cleaner fix is a
 **Prevention.** `num_turns` is recorded per CLI call; a failure cluster that names the infrastructure ("tool
 unavailable") is now checked against the trace before writing prompt rules. Lesson: fix the layer that causes the
 failure; prompt patches over an interface bug made some cases worse.
+
+## INC-9: malformed transfer calls on the API during the full test run
+In the 40 x 3 run the model sometimes returned `tool_call` as a JSON *string*, and for long
+`transfer_to_human_agents` summaries that string was itself malformed (17 cached string tool calls fail to decode - a missing or extra closing
+brace - most of them long transfer summaries). The adapter retried; 3 simulations still ran out of retries and were discarded (not scored). One was
+recovered on re-run; 2 (baseline task 94, policy task 27, one trial each) failed again because the failing reply
+is cached and replays identically. I added a one-level decode for well-formed string tool calls (a no-op on all
+cached replies, so recorded runs still replay) but did not add lenient JSON repair, which would change the
+replay of already-recorded simulations. Effect: each agent has 119 of 120 simulations; pass^k uses each task's own
+trial count and the two tasks drop out of pass^3 only.
