@@ -3,15 +3,16 @@
 [![ci](https://github.com/TonyLee-99/support-agent-evals/actions/workflows/ci.yml/badge.svg)](https://github.com/TonyLee-99/support-agent-evals/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**A customer-support agent measured honestly: on Sierra's tau2-bench retail (unmodified), the policy agent reaches
-pass^2 = 80% vs 50% for tau2's default agent on a frozen 10-task test subset (pass^1 85% vs 70%), and the
-production-shaped service around it cannot double-refund or act on another customer's order by construction.**
+**A customer-support agent measured honestly: on all 40 official tau2-bench retail test tasks x 3 trials, the
+policy agent does not beat tau2's default agent (pass^1 80% vs 83%, paired -2 pts, CI [-8, +4]) - the +15-pt lift
+seen earlier on a 10-task subset did not hold up - while the production-shaped service around it cannot
+double-refund or act on another customer's order by construction.**
 
 ![dashboard](docs/img/dashboard.png)
 
 | business problem | what I built | measured results |
 |---|---|---|
-| A retailer wants a bot for returns/exchanges/cancellations but cannot tell whether it is safe or improving | Policy agent (checklist prompt + code guards) on tau2-bench; FastAPI chat service + TS widget with confirmation cards, idempotent refunds, ownership checks, handoff queue, traces; eval flywheel (taxonomy -> clusters -> regression cases -> CI gate) | tau2 retail test subset (10 tasks, k=2, Haiku 5.5): pass^1 **85%** vs **70%** baseline (paired +15 pts, CI 0 to +30); pass^2 **80%** vs **50%**. Service: 38 deterministic acceptance tests incl. a 32-thread double-refund race (exactly 1 refund). Own scenarios (20): deterministic checks 90% -> **100%**, judge pass 35% -> **80%** (baseline -> shipped v3) |
+| A retailer wants a bot for returns/exchanges/cancellations but cannot tell whether it is safe or improving | Policy agent (checklist prompt + code guards) on tau2-bench; FastAPI chat service + TS widget with confirmation cards, idempotent refunds, ownership checks, handoff queue, traces; eval flywheel (taxonomy -> clusters -> regression cases -> CI gate) | tau2 retail, all 40 test tasks, k=3, Haiku 5.5: pass^1 **80%** vs **83%** baseline (paired -2 pts, CI -8 to +4: no measurable lift); pass^3 **67%** vs **69%**. Service: 38 deterministic acceptance tests incl. a 32-thread double-refund race (exactly 1 refund). Own scenarios (20): deterministic checks 90% -> **100%**, judge pass 35% -> **80%** (baseline -> shipped v3) |
 
 ## Architecture
 
@@ -49,18 +50,24 @@ Live paths: `make tau2 N=10 K=2` (Anthropic API, budget-guarded), `make dev`, `m
 
 ## Results
 
-### tau2-bench retail (frozen 10-task subset of the official test split, k=2)
-| agent | pass^1 [95% CI] | pass^2 [95% CI] | DB-only pass^1 |
-|---|---|---|---|
-| baseline: tau2 `llm_agent` (default prompt) | 70% [50, 90] | 50% [20, 80] | 75% |
-| policy_agent (checklist + guards) | 85% [65, 100] | 80% [50, 100] | 85% |
+### tau2-bench retail (all 40 tasks of the official test split, k=3)
+| agent | pass^1 [95% CI] | pass^2 [95% CI] | pass^3 [95% CI] | DB-only pass^1 |
+|---|---|---|---|---|
+| baseline: tau2 `llm_agent` (default prompt) | 83% [73, 92] | 74% [62, 87] | 69% [54, 82] | 83% |
+| policy_agent (checklist + guards) | 80% [71, 89] | 71% [58, 83] | 67% [51, 82] | 81% |
 
-Paired difference pass^1: +15 pts, CI [0, +30], 3 tasks better, 0 worse, 7 same
-(`results/tau2_test_summary.json`). Agent, user simulator and NL grader are all `claude-haiku-5-5`; not
+Paired difference pass^1: -2 pts, CI [-8, +4], 6 tasks better, 7 worse, 27 same (pass^3: -5 pts, CI [-18, +11])
+(`results/tau2_test_summary.json`). 240 simulations planned; 238 kept: 2 hit an adapter failure
+(a malformed `transfer_to_human_agents` call, INC-9), were discarded rather than scored, and their task is left
+out of pass^3 only. **The earlier 10-task x 2-trial run showed +15 pts (CI [0, +30],
+`results/tau2_test10_summary.json`); on the full split that lift disappears.** Those 10 tasks were a seeded
+random draw made before tuning, so the gap is sampling noise in a small subset, not test-set tuning. Agent, user simulator and NL grader are all `claude-haiku-5-5`; not
 comparable to the public leaderboard (every difference is listed in the summary file and on the dashboard).
 
-The confirmation gate fired 16 times in the policy agent's 20 test simulations (writes attempted before an explicit
-yes). Dev ablations (10 tasks, k=1, exploratory): removing the checklist prompt costs 20 pts, removing the
+The confirmation gate fired 34 times in the policy agent's 119 test simulations (writes attempted before an
+explicit yes) without improving the score: tau2's simulated customers usually say yes anyway, so on this benchmark
+the guard changes the turn order more than the outcome. Of the 44 failed test simulations, the labeller attributes
+17 to the user simulator (`results/flywheel/test_taxonomy_descriptive.json`, descriptive only). Dev ablations (10 tasks, k=1, exploratory): removing the checklist prompt costs 20 pts, removing the
 confirmation gate 10 pts, the other guards 0 (`results/ablations.json`).
 
 ### Own scenarios on the service stack (20 of 100: 10 self-written + 10 codex-blind; 11 are holdout)
@@ -97,7 +104,8 @@ $3.50). Subscription CLI: 2,481 live calls, $2.62 list-price equivalent, not bil
   screenshot (scripted model so it is reproducible).
 
 ## Limitations
-Small samples (10 tasks x 2 trials; 20 scenarios; 10 calibration items) - read the CIs. Same model family plays
+Small samples outside the benchmark (20 scenarios; 10 calibration items) - read the CIs. On tau2 the policy
+agent shows no lift over the default agent at N=40, k=3. Same model family plays
 agent, customer and judge. Tool calling is emulated over JSON, so results are specific to this interface.
 
 ## From demo to production

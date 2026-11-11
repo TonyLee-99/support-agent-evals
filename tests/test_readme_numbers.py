@@ -8,19 +8,32 @@ README = (ROOT / "README.md").read_text()
 R = ROOT / "results"
 
 
+def half_up(v: float) -> int:
+    import math
+
+    return math.floor(v + 0.5)  # same rounding as the dashboard (JS Math.round), so 82.5% -> 83%
+
+
 def pct(x: float) -> str:
-    return f"{round(100 * x)}%"
+    return f"{half_up(100 * x)}%"
 
 
 def test_tau2_numbers():
     s = json.loads((R / "tau2_test_summary.json").read_text())
     b, p = s["runs"]["baseline"], s["runs"]["policy_agent"]
     c = s["comparison"]["pass^1"]
+    def ci(x):
+        return f"{pct(x['mean'])} [{half_up(100 * x['ci95'][0])}, {half_up(100 * x['ci95'][1])}]"
+
+    def signed(v):
+        return f"{half_up(100 * v):+d}".replace("+0", "0")
+
+    c3 = s["comparison"]["pass^3"]
     for needle in (f"pass^1 {pct(p['pass^1']['mean'])} vs {pct(b['pass^1']['mean'])}",
-                   f"pass^2 = {pct(p['pass^2']['mean'])} vs {pct(b['pass^2']['mean'])}",
-                   f"{pct(b['pass^1']['mean'])} [{round(100 * b['pass^1']['ci95'][0])}, {round(100 * b['pass^1']['ci95'][1])}]",
-                   f"{pct(p['pass^1']['mean'])} [{round(100 * p['pass^1']['ci95'][0])}, {round(100 * p['pass^1']['ci95'][1])}]",
-                   f"+{round(100 * c['diff'])} pts, CI [{round(100 * c['ci95'][0])}, +{round(100 * c['ci95'][1])}]",
+                   f"pass^3 **{pct(p['pass^3']['mean'])}** vs **{pct(b['pass^3']['mean'])}**",
+                   *(ci(r[f"pass^{k}"]) for r in (b, p) for k in (1, 2, 3)),
+                   f"{signed(c['diff'])} pts, CI [{signed(c['ci95'][0])}, {signed(c['ci95'][1])}]",
+                   f"pass^3: {signed(c3['diff'])} pts, CI [{signed(c3['ci95'][0])}, {signed(c3['ci95'][1])}]",
                    f"{c['tasks_better']} tasks better, {c['tasks_worse']} worse"):
         assert needle in README, needle
 
