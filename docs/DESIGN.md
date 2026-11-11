@@ -45,10 +45,9 @@ The support agent is the vehicle. The product is the evaluation and monitoring l
   `claudecli/claude-haiku-5-5`. No tau2 file changes. Our runner registers the provider and our agent factory, then
   calls tau2's public Layer-2 API (`build_text_orchestrator` + `run_simulation`) per (task, trial).
 - **Tool-call emulation.** The CLI has no native function calling. The provider renders tool JSON schemas into the
-  system prompt and asks for a JSON object `{"message": str|null, "tool_calls": [{"name", "arguments"}]}` enforced by
-  `--json-schema`. The adapter validates the object, maps it to OpenAI `tool_calls` (ids are deterministic:
-  `call_<sha8>`), and if the model returns both text and a tool call it keeps the tool call (logged as
-  `both_text_and_tool`). The user simulator gets the same adapter with no tools. The adapter is identical for
+  system prompt and asks for a JSON object `{"action": "message"|"tool_call", "message", "tool_call": {"name", "arguments"}}`
+  enforced by `--json-schema` (see section 9). The adapter validates the object and maps it to an OpenAI
+  `tool_calls` entry (ids are deterministic: `call_<sha8>`). The user simulator gets the same adapter with no tools. The adapter is identical for
   baseline and our agent, so it cannot favour one of them.
 - **Trials and the cache.** The cache key includes a `sample` index = trial number, passed through
   `llm_args={"metadata": {"trial": t}}`. Without it, trial 2 would replay trial 1 byte-for-byte and pass^k would be
@@ -106,7 +105,7 @@ flag, on dev, k=1 (budget permitting k=2).
 
 ## 6. Eval flywheel
 
-1. **Traces in:** failed tau2 simulations (test + dev) and failed own-scenario runs.
+1. **Traces in:** failed tau2 *dev* simulations and failed own *dev* scenario runs (never test/holdout; section 9).
 2. **Label:** fixed codebook (derived by open coding the first 15 failures by hand, then frozen); an LLM labeller
    gets transcript + evaluator diff (expected vs actual actions / DB) and returns `{category, first_bad_turn,
    root_cause}`. Codebook includes `user_sim_error` so benchmark noise is not blamed on the agent.
@@ -140,6 +139,27 @@ flag, on dev, k=1 (budget permitting k=2).
 llm) + pytest + widget type-check, all offline. tau2 simulations are not re-run in CI; CI recomputes metrics from the
 committed `results/tau2/*/sims.jsonl.gz` and checks them against the summary files.
 
-## 9. Non-goals
+## 9. Changes after design review (2026-11-11)
+
+An independent review (codex) found real problems; accepted fixes:
+- **No test contamination.** The flywheel only consumes dev-split and own-dev-scenario failures. The final agent is
+  frozen (fingerprint committed) before its test run. Test failures are labelled descriptively and feed the *next*
+  version only.
+- **Mutually exclusive output.** The adapter schema is `{"action": "message"|"tool_call", "message", "tool_call"}`,
+  so text and a tool call can never be combined and at most one call is emitted (retail policy). Raw output and
+  adapter repairs/retries are recorded per agent.
+- **Isolation.** Empty sandbox cwd, no tools, no settings, no MCP, no session persistence; a canary test checks the
+  model cannot read files. CLI version is logged per run.
+- **Service identity.** Writes need a channel-authenticated principal (signed session token). Lookup by name+zip is
+  labelled simulated identification (it is what tau2's policy asks for, not real authentication); anonymous sessions
+  are read-only + handoff.
+- **One transaction** validates ownership, status, limits, pending-action single use + expiry, and stores the
+  idempotency response; tests cover concurrent different-item refunds vs the daily limit, confirm vs cancel races,
+  same-key races and an injected crash before commit.
+- **Statistics.** pass^1 is the preregistered primary metric; pass^k secondary; ablations exploratory.
+- **Trials.** The trial index reaches the agent and the user simulator; a test checks trials produce distinct keys.
+- **Regression cases** need manual approval; CI evidence (replay consistency) is reported separately from live runs.
+
+## 10. Non-goals
 
 Shopify, Zendesk, Twilio, email channel, K8s, voice. Fine-tuning the agent model (ADR).
