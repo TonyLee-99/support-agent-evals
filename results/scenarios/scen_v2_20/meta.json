@@ -1,0 +1,10 @@
+{
+ "run_id": "scen_v2_20",
+ "version": "v2",
+ "split": "all",
+ "trial": 0,
+ "agent_model": "claude-haiku-5-5",
+ "user_sim_model": "claude-haiku-5-5",
+ "backend": "claude_cli",
+ "system_prompt_sha256": "59aabd81e8a8309390e778f50bf589f6aa332c7bd7a7cf94f4d414ab97456799"
+}

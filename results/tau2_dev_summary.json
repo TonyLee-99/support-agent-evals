@@ -1,31 +1,31 @@
 {
  "runs": {
   "baseline": {
-   "n_tasks": 5,
+   "n_tasks": 10,
    "n_trials_min": 1,
-   "n_sims": 5,
+   "n_sims": 10,
    "pass^1": {
-    "mean": 0.4,
+    "mean": 0.6,
     "ci95": [
-     0.0,
-     0.8
+     0.3,
+     0.9
     ]
    },
    "db_only": {
-    "n_tasks": 5,
+    "n_tasks": 10,
     "n_trials_min": 1,
-    "n_sims": 5,
+    "n_sims": 10,
     "pass^1": {
-     "mean": 0.6,
+     "mean": 0.8,
      "ci95": [
-      0.2,
+      0.5,
       1.0
      ]
     }
    },
-   "mean_wall_s": 125.6,
+   "mean_wall_s": 280.5,
    "termination": {
-    "user_stop": 5
+    "user_stop": 10
    },
    "config": {
     "agent": "llm_agent",
@@ -51,35 +51,46 @@
      0
     ]
    },
-   "adapter_stats": {},
+   "adapter_stats": {
+    "user:calls": 103,
+    "user:cached": 14,
+    "user:adapter_unwrapped": 48,
+    "agent:calls": 175,
+    "agent:cached": 14,
+    "unknown:calls": 5,
+    "unknown:cached": 1,
+    "agent:live": 161,
+    "user:live": 89,
+    "unknown:live": 4
+   },
    "discarded_sims": 0
   },
   "policy_agent": {
-   "n_tasks": 6,
+   "n_tasks": 10,
    "n_trials_min": 1,
-   "n_sims": 6,
+   "n_sims": 10,
    "pass^1": {
-    "mean": 0.8333,
+    "mean": 0.8,
     "ci95": [
      0.5,
      1.0
     ]
    },
    "db_only": {
-    "n_tasks": 6,
+    "n_tasks": 10,
     "n_trials_min": 1,
-    "n_sims": 6,
+    "n_sims": 10,
     "pass^1": {
-     "mean": 0.8333,
+     "mean": 0.8,
      "ci95": [
       0.5,
       1.0
      ]
     }
    },
-   "mean_wall_s": 51.8,
+   "mean_wall_s": 196.2,
    "termination": {
-    "user_stop": 6
+    "user_stop": 10
    },
    "config": {
     "agent": "policy_agent",
@@ -105,23 +116,34 @@
      0
     ]
    },
-   "adapter_stats": {},
+   "adapter_stats": {
+    "user:calls": 99,
+    "user:cached": 26,
+    "user:adapter_unwrapped": 41,
+    "agent:calls": 176,
+    "agent:cached": 64,
+    "unknown:calls": 5,
+    "unknown:cached": 3,
+    "user:live": 73,
+    "agent:live": 112,
+    "unknown:live": 2
+   },
    "discarded_sims": 0
   }
  },
  "comparison": {
   "pass^1": {
    "k": 1,
-   "n_tasks": 5,
-   "diff": 0.4,
+   "n_tasks": 10,
+   "diff": 0.2,
    "ci95": [
-    -0.4,
-    1.0
+    -0.2,
+    0.6
    ],
    "tasks_better": 3,
    "tasks_worse": 1,
-   "tasks_same": 1,
-   "p_boot_le_0": 0.193
+   "tasks_same": 6,
+   "p_boot_le_0": 0.2075
   }
  }
 }

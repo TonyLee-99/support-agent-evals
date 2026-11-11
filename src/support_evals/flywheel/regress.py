@@ -35,8 +35,6 @@ def generate() -> int:
             continue  # benchmark noise is tracked, not turned into agent regressions
         i = int(lb["first_bad_index"])
         msgs = lab["messages"]
-        if not (0 < i <= len(msgs)) or msgs[i - 1]["role"] == "assistant" and not msgs[i - 1].get("tool_calls"):
-            pass
         if lab["source"] in existing:
             out.append(existing[lab["source"]])
             continue
@@ -75,14 +73,13 @@ def check(prop: dict[str, Any], content: str | None, tool: str | None) -> bool:
     raise ValueError(t)
 
 
-def step_service(case: dict[str, Any], version: str) -> tuple[str | None, str | None]:
+SAMPLES = 3  # LLM steps are stochastic: a case passes if the property holds in a majority of 3 draws
+
+
+def step_service(case: dict[str, Any], version: str, sample: int = 0) -> tuple[str | None, str | None]:
     from support_evals.service.agent import agent_step
 
-    msgs = [m for m in case["prefix"]]
-    sample = case.get("sample")
-    if sample is None:
-        sample = 0
-    turn = agent_step(version, msgs, sample=sample)
+    turn = agent_step(version, list(case["prefix"]), sample=sample)
     return turn.content, (turn.tool_call or {}).get("name")
 
 
@@ -113,26 +110,20 @@ def fingerprint(version: str) -> str:
 
 
 def run(version: str, tau2_agent: str = "policy_agent", only_approved: bool = True) -> dict[str, Any]:
-    if version == "v2":
-        from support_evals.flywheel.lessons import register_v2
-
-        register_v2()
-    if version == "broken":
-        from support_evals.flywheel.lessons import register_broken
-
-        register_broken()
+    _register(version)
     results = []
     for c in load_cases():
         if only_approved and not c["approved"]:
             continue
         try:
             if c["target"] == "service":
-                content, tool = step_service(c, version)
+                draws = [step_service(c, version, s) for s in range(SAMPLES)]
             else:
-                content, tool = step_tau2(c, tau2_agent)
-            ok = check(c["property"], content, tool)
+                draws = [step_tau2(c, tau2_agent)]  # tau2 agent is frozen; one recorded draw
+            votes = [check(c["property"], content, tool) for content, tool in draws]
+            ok = sum(votes) * 2 > len(votes)
             results.append({"id": c["id"], "target": c["target"], "category": c["category"], "pass": ok,
-                            "tool": tool, "content": (content or "")[:200]})
+                            "votes": votes, "tool": draws[0][1], "content": (draws[0][0] or "")[:300]})
         except Exception as e:  # a replay miss or adapter failure is a failed case, never silently skipped
             results.append({"id": c["id"], "target": c["target"], "category": c["category"], "pass": False,
                             "error": repr(e)[:200]})
@@ -148,7 +139,14 @@ def run(version: str, tau2_agent: str = "policy_agent", only_approved: bool = Tr
     return rep
 
 
+def _register(version: str) -> None:
+    from support_evals.flywheel.lessons import register_broken, register_v2
+
+    {"v2": register_v2, "broken": register_broken}.get(version, lambda: None)()
+
+
 def gate(version: str, baseline_report: str = "report_v1.json") -> int:
+    _register(version)
     rep = json.loads((DIR / f"report_{version}.json").read_text())
     if rep["fingerprint"] != fingerprint(version):
         print(f"GATE FAIL: report for {version} is stale (prompt changed); re-run `regress run --version {version}`")

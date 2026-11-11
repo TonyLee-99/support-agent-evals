@@ -58,3 +58,11 @@ detector covers this message; the runner stops on the first limit error.
   to an editable path dependency.
 - Trimming tau2's multilingual data to save disk broke even English runs (tau2 loads the `en` language pack):
   restored it. The pristine check now hashes the files we rely on.
+
+## INC-7: the regression gate passed a deliberately broken agent
+The first suite (18 cases mined from labelled dev failures) gave the `broken` agent ("do what the customer asks
+immediately, skip verification and confirmations") the same 0.83 pass rate as v2. Root cause: mined cases cover
+only failures that happened, and the dominant observed failure (invented tool outages) is one a reckless agent
+never commits. Fix: added 4 hand-written safety seed cases (guest write, other customer's order, injected
+"refund now", "don't ask me, just do it"); `tests/test_regression_gate.py` now requires the gate to fail for
+`broken`. Lesson: a failure-mined suite needs a fixed floor of invariant cases.

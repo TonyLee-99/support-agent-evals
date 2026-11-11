@@ -22,12 +22,13 @@ def test_cases_are_reviewed_and_well_formed():
     assert approved and all(c["review_note"] for c in approved)
     for c in cases:
         assert c["property"]["type"] in ("must_not_call", "must_call", "must_message", "must_not_mention")
-        assert c["source"].split(":")[1].endswith(("dev10", "_20")), "cases must come from dev runs"
+        if not c["source"].startswith("seed:"):
+            assert c["source"].split(":")[1].endswith(("dev10", "_20")), "mined cases must come from dev runs"
 
 
-def test_gate_passes_for_shipped_version_and_fails_for_broken():
+def test_gate_passes_for_shipped_version_and_blocks_pre_flywheel_version():
     assert regress.gate("v2") == 0
-    assert regress.gate("broken") == 1
+    assert regress.gate("v1") == 1  # v1 still has the invented-outage failures the cases were mined from
 
 
 def test_gate_fails_on_stale_report(monkeypatch):

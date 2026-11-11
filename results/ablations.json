@@ -1,0 +1,181 @@
+{
+ "split": "dev (10 tasks, k=1)",
+ "note": "exploratory: one trial, 10 tasks; CIs are wide and no causal claim is made",
+ "rows": [
+  {
+   "variant": "baseline (tau2 default)",
+   "run": "llm_agent_dev10",
+   "n_tasks": 10,
+   "pass^1": {
+    "mean": 0.6,
+    "ci95": [
+     0.3,
+     0.9
+    ]
+   },
+   "vs_full": {
+    "k": 1,
+    "n_tasks": 10,
+    "diff": -0.2,
+    "ci95": [
+     -0.6,
+     0.2
+    ],
+    "tasks_better": 1,
+    "tasks_worse": 3,
+    "tasks_same": 6,
+    "p_boot_le_0": 0.913
+   }
+  },
+  {
+   "variant": "full policy_agent",
+   "run": "policy_agent_dev10",
+   "n_tasks": 10,
+   "pass^1": {
+    "mean": 0.8,
+    "ci95": [
+     0.5,
+     1.0
+    ]
+   },
+   "vs_full": {
+    "k": 1,
+    "n_tasks": 10,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "tasks_better": 0,
+    "tasks_worse": 0,
+    "tasks_same": 10,
+    "p_boot_le_0": 1.0
+   }
+  },
+  {
+   "variant": "minus planner",
+   "run": "policy_agent__minus_planner_dev10",
+   "n_tasks": 10,
+   "pass^1": {
+    "mean": 0.6,
+    "ci95": [
+     0.3,
+     0.9
+    ]
+   },
+   "vs_full": {
+    "k": 1,
+    "n_tasks": 10,
+    "diff": -0.2,
+    "ci95": [
+     -0.6,
+     0.2
+    ],
+    "tasks_better": 1,
+    "tasks_worse": 3,
+    "tasks_same": 6,
+    "p_boot_le_0": 0.9095
+   }
+  },
+  {
+   "variant": "minus arg_check",
+   "run": "policy_agent__minus_arg_check_dev10",
+   "n_tasks": 10,
+   "pass^1": {
+    "mean": 0.8,
+    "ci95": [
+     0.5,
+     1.0
+    ]
+   },
+   "vs_full": {
+    "k": 1,
+    "n_tasks": 10,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "tasks_better": 0,
+    "tasks_worse": 0,
+    "tasks_same": 10,
+    "p_boot_le_0": 1.0
+   }
+  },
+  {
+   "variant": "minus confirm_gate",
+   "run": "policy_agent__minus_confirm_gate_dev10",
+   "n_tasks": 10,
+   "pass^1": {
+    "mean": 0.7,
+    "ci95": [
+     0.4,
+     1.0
+    ]
+   },
+   "vs_full": {
+    "k": 1,
+    "n_tasks": 10,
+    "diff": -0.1,
+    "ci95": [
+     -0.3,
+     0.0
+    ],
+    "tasks_better": 0,
+    "tasks_worse": 1,
+    "tasks_same": 9,
+    "p_boot_le_0": 1.0
+   }
+  },
+  {
+   "variant": "minus identity_gate",
+   "run": "policy_agent__minus_identity_gate_dev10",
+   "n_tasks": 10,
+   "pass^1": {
+    "mean": 0.8,
+    "ci95": [
+     0.5,
+     1.0
+    ]
+   },
+   "vs_full": {
+    "k": 1,
+    "n_tasks": 10,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "tasks_better": 0,
+    "tasks_worse": 0,
+    "tasks_same": 10,
+    "p_boot_le_0": 1.0
+   }
+  },
+  {
+   "variant": "minus handoff",
+   "run": "policy_agent__minus_handoff_dev10",
+   "n_tasks": 10,
+   "pass^1": {
+    "mean": 0.8,
+    "ci95": [
+     0.5,
+     1.0
+    ]
+   },
+   "vs_full": {
+    "k": 1,
+    "n_tasks": 10,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "tasks_better": 0,
+    "tasks_worse": 0,
+    "tasks_same": 10,
+    "p_boot_le_0": 1.0
+   }
+  }
+ ]
+}
