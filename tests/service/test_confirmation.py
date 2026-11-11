@@ -65,3 +65,13 @@ def test_decline_records_and_blocks_execution(tools, store):
     from support_evals.service.tools import Conflict
     with pytest.raises(Conflict):
         tools.confirm(A, act["action_id"], "k")
+
+
+def test_kill_switch_blocks_new_writes(tools, monkeypatch):
+    import pytest
+
+    from support_evals.service.tools import ToolError
+    monkeypatch.setenv("SE_WRITES_ENABLED", "0")
+    with pytest.raises(ToolError) as e:
+        propose_return(tools)
+    assert e.value.code == "writes_disabled"

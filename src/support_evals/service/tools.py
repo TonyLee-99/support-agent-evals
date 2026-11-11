@@ -16,6 +16,7 @@ import ast
 import hashlib
 import json
 import operator
+import os
 import time
 import uuid
 from collections.abc import Callable
@@ -152,6 +153,9 @@ class Tools:
     # --- write path ---------------------------------------------------------------------------------------
     def validate_write(self, s: Session, name: str, args: dict[str, Any]) -> tuple[dict[str, Any], str, float]:
         """Check a proposed write against current state. Returns (canonical payload, summary, refund amount)."""
+        if os.environ.get("SE_WRITES_ENABLED", "1") == "0":  # kill switch, read per request (no deploy needed)
+            raise ToolError("changes are temporarily paused; offer to transfer the customer to a human",
+                            "writes_disabled")
         if s.principal is None:
             raise ToolError("changes need a signed-in customer; ask the customer to log in or hand off",
                             "login_required")
