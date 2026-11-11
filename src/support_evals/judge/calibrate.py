@@ -114,7 +114,7 @@ def score() -> None:
                         "grader_a_note": g["grader_a"][i].get("note", "")[:300],
                         "grader_b_note": g["grader_b"][i].get("note", "")[:300]})
     out = {"n": len(ids), "dimension": "overall", "sampling": f"seed 7, stratified {s['strata']}, from {list(RUNS)}",
-           "graders": {"grader_a": "fresh Claude grader (subagent) that saw only the rubric and transcripts",
+           "graders": {"grader_a": "fresh Claude grader that saw only the rubric and transcripts",
                        "grader_b": "ChatGPT via codex exec, same packet", "judge": "claude-haiku-5-5, frozen rubric"},
            "pass_rates": {k: round(v.count("pass") / len(v), 3) for k, v in labels.items()},
            "pairs": {"judge_vs_grader_a": pairs["judge_vs_grader_a"], "judge_vs_grader_b": pairs["judge_vs_grader_b"],

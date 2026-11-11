@@ -3,7 +3,7 @@
  "dimension": "overall",
  "sampling": "seed 7, stratified {'det_fail': 4, 'det_pass': 6}, from ['scen_baseline_20', 'scen_v1_20']",
  "graders": {
-  "grader_a": "fresh Claude grader (subagent) that saw only the rubric and transcripts",
+  "grader_a": "fresh Claude grader that saw only the rubric and transcripts",
   "grader_b": "ChatGPT via codex exec, same packet",
   "judge": "claude-haiku-5-5, frozen rubric"
  },

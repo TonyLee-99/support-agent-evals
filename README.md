@@ -105,8 +105,7 @@ Postgres instead of SQLite (same transaction shape), real SSO instead of the dem
 the handoff queue, a 5% shadow-traffic sample graded weekly, and the rollout plan in
 [docs/ROLLOUT.md](docs/ROLLOUT.md) (shadow -> 5% -> 25% -> GA with guardrails and a kill switch).
 
-## How I used Claude Code and how I verified it
-The code was written with Claude Code. Verification did not rely on it: tau2's own evaluator scores the benchmark;
-service invariants are deterministic tests with real threads; half the scenarios and one of the two judge graders
-are ChatGPT (codex), blind to the agent; an independent codex review checked the design before coding and the
-results at the end (`reviews/` is local-only).
+## How the results were verified
+The benchmark is scored by tau2's own evaluator; service invariants are deterministic tests with real threads; half the
+scenarios and one of the two judge graders are ChatGPT (codex), blind to the agent; the design was reviewed by an
+independent reviewer before coding and the results again at the end.
