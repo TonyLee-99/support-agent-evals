@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import re
 import time
-import uuid
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +18,7 @@ from support_evals.llm import HAIKU, get_client
 from support_evals.prompts import PLANNER_INSTRUCTION
 from support_evals.service import guards
 from support_evals.service.store import Store
-from support_evals.service.tools import WRITE_TOOLS, Session, ToolError, Tools
+from support_evals.service.tools import WRITE_TOOLS, CounterIds, Session, ToolError, Tools, random_id
 
 SCHEMAS = json.loads((Path(__file__).parent / "tool_schemas.json").read_text())
 TOOL_NAMES = [s["function"]["name"] for s in SCHEMAS]
@@ -85,14 +84,15 @@ def parse_handoff_summary(summary: str) -> dict[str, str]:
 
 
 class Engine:
-    def __init__(self, store: Store, model: str = HAIKU):
+    def __init__(self, store: Store, model: str = HAIKU, id_seed: str | None = None):
         self.store = store
-        self.tools = Tools(store)
+        self.new_id = CounterIds(id_seed) if id_seed else random_id
+        self.tools = Tools(store, new_id=self.new_id)
         self.model = model
 
     # --- persistence helpers ------------------------------------------------------------------------------
     def create_conversation(self, principal: str | None, version: str = "v1", sample: Any = 0) -> str:
-        cid = "conv_" + uuid.uuid4().hex[:12]
+        cid = self.new_id("conv")
         self.store.conn().execute("INSERT INTO conversations (conversation_id, principal, identified_user, state,"
                                   " agent_version) VALUES (?,?,?,?,?)",
                                   (cid, principal, None, "open", f"{version}|{sample}"))
@@ -188,7 +188,7 @@ class Engine:
                            model_latency_ms=resp.latency_s * 1000, input_tokens=resp.input_tokens,
                            output_tokens=resp.output_tokens, cost_usd=resp.cost_usd, cached=resp.cached, step=step)
                 try:
-                    parsed = parse(resp.structured, TOOL_NAMES, salt=f"{cid}|{step}")
+                    parsed = parse(resp.structured, TOOL_NAMES, salt=f"{sample}|{len(msgs)}")
                     break
                 except AdapterError as e:
                     self._span(cid, turn, "guard", "adapter_invalid", 0.0, error=str(e))
@@ -250,7 +250,7 @@ class Engine:
 
     def _handoff(self, cid: str, fields: dict[str, str]) -> str:
         conv = self.conversation(cid)
-        tid = "tkt_" + uuid.uuid4().hex[:10]
+        tid = self.new_id("tkt")
         reason = fields.get("reason") or "customer request"
         priority = "high" if re.search(r"refund|fraud|angry|legal|chargeback", reason, re.I) else "normal"
         self.store.conn().execute(

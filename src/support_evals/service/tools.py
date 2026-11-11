@@ -82,10 +82,27 @@ def safe_calc(expr: str) -> float:
     return round(ev(ast.parse(expr, mode="eval").body), 2)
 
 
+def random_id(prefix: str) -> str:
+    return f"{prefix}_{uuid.uuid4().hex[:12]}"
+
+
+class CounterIds:
+    """Deterministic ids for evaluation runs: prompts then contain no random ids, so runs replay from cache."""
+
+    def __init__(self, seed: str):
+        self.seed, self.n = seed, 0
+
+    def __call__(self, prefix: str) -> str:
+        self.n += 1
+        return f"{prefix}_{sha(f'{self.seed}|{self.n}')[:12]}"
+
+
 class Tools:
-    def __init__(self, store: Store, fault: Callable[[str], None] | None = None):
+    def __init__(self, store: Store, fault: Callable[[str], None] | None = None,
+                 new_id: Callable[[str], str] = random_id):
         self.store = store
         self.fault = fault or (lambda point: None)  # test hook: raise at a named point to simulate a crash
+        self.new_id = new_id
 
     # --- reads --------------------------------------------------------------------------------------------
     def read(self, s: Session, name: str, args: dict[str, Any]) -> Any:
@@ -189,7 +206,7 @@ class Tools:
 
     def propose(self, s: Session, name: str, args: dict[str, Any]) -> dict[str, Any]:
         payload, summary, amount = self.validate_write(s, name, args)
-        action_id = "act_" + uuid.uuid4().hex[:12]
+        action_id = self.new_id("act")
         c = self.store.conn()
         c.execute("INSERT INTO pending_actions VALUES (?,?,?,?,?,?,?,?,?,NULL)",
                   (action_id, s.conversation_id, s.principal, name, canonical(payload), sha(canonical(payload)),
@@ -270,7 +287,7 @@ class Tools:
         today = c.execute("SELECT COALESCE(SUM(amount),0) s FROM refunds WHERE user_id=? AND created_at >= date('now')",
                           (principal,)).fetchone()["s"]
         if amount > AUTO_REFUND_LIMIT or today + amount > DAILY_REFUND_LIMIT:
-            tid = "tkt_" + uuid.uuid4().hex[:10]
+            tid = self.new_id("tkt")
             reason = (f"refund ${amount:.2f} exceeds auto-approval limit ${AUTO_REFUND_LIMIT:.0f}"
                       if amount > AUTO_REFUND_LIMIT else
                       f"daily refunds would reach ${today + amount:.2f} > ${DAILY_REFUND_LIMIT:.0f}")
