@@ -51,12 +51,12 @@ const t = D.tau2;
 if (t) {
   const b = t.runs.baseline, p = t.runs.policy_agent, c = t.comparison["pass^1"];
   document.getElementById("sub").textContent =
-    `tau2-bench retail, frozen ${b.n_tasks}-task subset of the official test split, k=${b.n_trials_min} trials, ` +
+    `tau2-bench retail, ${b.n_tasks === 40 ? "all 40 tasks of" : "frozen " + b.n_tasks + "-task subset of"} the official test split, k=${(b.n_trials_max || b.n_trials_min)} trials, ` +
     `agent + user simulator = ${b.config.agent_model}. Not leaderboard-comparable (see differences below).`;
   card("span4 kpi", `<div class="l">pass^1 - policy agent</div><div class="v">${pct(p["pass^1"].mean)}</div>
     <div class="d">95% CI ${pct(p["pass^1"].ci95[0])}–${pct(p["pass^1"].ci95[1])}</div>
     <div class="d ${c.diff >= 0 ? "up" : "down"}">${c.diff >= 0 ? "+" : ""}${(100*c.diff).toFixed(0)} pts vs baseline ${pct(b["pass^1"].mean)} (paired CI ${(100*c.ci95[0]).toFixed(0)} to ${(100*c.ci95[1]).toFixed(0)})</div>`);
-  const k = `pass^${b.n_trials_min}`;
+  const k = `pass^${(b.n_trials_max || b.n_trials_min)}`;
   card("span4 kpi", `<div class="l">${k} - reliability across trials</div><div class="v">${pct(p[k].mean)}</div>
     <div class="d">baseline ${pct(b[k].mean)} · CI ${pct(p[k].ci95[0])}–${pct(p[k].ci95[1])}</div>
     <div class="note">Share of tasks solved on every one of k runs. Averages hide this.</div>`);
@@ -86,10 +86,10 @@ function bars(rows, title, note) {
 }
 if (t) {
   const rows = [];
-  ["pass^1", "pass^2"].forEach((k) => ["baseline", "policy_agent"].forEach((n) => {
+  ["pass^1", "pass^2", "pass^3"].filter((k) => t.runs.baseline[k]).forEach((k) => ["baseline", "policy_agent"].forEach((n) => {
     const s = t.runs[n][k]; if (s) rows.push({label: `${n === "baseline" ? "baseline" : "policy agent"} ${k}`, v: s.mean, lo: s.ci95[0], hi: s.ci95[1], color: n === "baseline" ? "#c9c2b4" : "#0f766e"});
   }));
-  card("span6", bars(rows, "tau2-bench retail (frozen test subset)", "Whiskers: 95% bootstrap CI over tasks. Small n: read the CI, not the bar."));
+  card("span6", bars(rows, "tau2-bench retail (official test split)", "Whiskers: 95% bootstrap CI over tasks. Small n: read the CI, not the bar."));
 }
 if (sc) {
   const rows = [];
