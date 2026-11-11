@@ -289,3 +289,13 @@ class Engine:
                                    and (s["name"] != "injection_user_text" or s.get("flagged"))),
             },
         }
+
+
+def agent_step(version: str, messages: list[dict[str, Any]], sample: Any = 0, model: str = HAIKU):
+    """One agent decision on a fixed conversation prefix (used by regression cases). Same cache key shape as
+    Engine._run, so re-running the version that produced the trace replays the recorded step."""
+    msgs = [{"role": "system", "content": system_prompt(version)}, *messages]
+    sys_text, prompt = render(msgs, SCHEMAS)
+    resp = get_client(model).complete(sys_text, prompt, schema=tools_schema(TOOL_NAMES), sample=f"{sample}",
+                                      tag=f"regress:{version}")
+    return parse(resp.structured, TOOL_NAMES, salt=f"{sample}|{len(msgs)}")

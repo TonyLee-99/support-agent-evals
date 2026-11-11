@@ -1,0 +1,56 @@
+{
+ "run_id": "policy_agent_test10_api",
+ "agent": "policy_agent",
+ "split": "test",
+ "task_ids": [
+  "42",
+  "45",
+  "51",
+  "64",
+  "65",
+  "68",
+  "70",
+  "79",
+  "97",
+  "111"
+ ],
+ "trials": [
+  0,
+  1
+ ],
+ "agent_model": "claude-haiku-5-5",
+ "user_model": "claude-haiku-5-5",
+ "nl_judge_model": "claude-haiku-5-5",
+ "backend": "anthropic Messages API (respond tool, cached system prefix; CLI fallback over budget)",
+ "cli_version": "2.1.316 (Claude Code)",
+ "tau2_commit": "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4",
+ "max_steps": 100,
+ "domain": "retail",
+ "adapter_stats": {
+  "user:calls": 179,
+  "user:cached": 106,
+  "agent:calls": 334,
+  "agent:cached": 166,
+  "agent:live": 168,
+  "user:adapter_unwrapped": 6,
+  "user:live": 73,
+  "unknown:calls": 11,
+  "unknown:cached": 4,
+  "unknown:live": 7,
+  "unknown:adapter_invalid": 1
+ },
+ "errors": [
+  {
+   "task_id": "111",
+   "trial": 0,
+   "error": "JSONDecodeError('Extra data: line 1 column 971 (char 970)')",
+   "tb": "        ^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/Projects/support-agent-evals/third_party/tau2-bench/src/tau2/runner/simulation.py\", line 142, in run_simulation\n    reward_info = evaluate_simulation(\n                  ^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/Projects/support-agent-evals/third_party/tau2-bench/src/tau2/evaluator/evaluator.py\", line 227, in evaluate_simulation\n    nl_reward_info = NLEvaluator.calculate_reward(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/Projects/support-agent-evals/third_party/tau2-bench/src/tau2/evaluator/evaluator_nl_assertions.py\", line 42, in calculate_reward\n    nl_assertions_checks = cls.evaluate_nl_assertions(\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/Projects/support-agent-evals/third_party/tau2-bench/src/tau2/evaluator/evaluator_nl_assertions.py\", line 123, in evaluate_nl_assertions\n    result_data = json.loads(assistant_message.content)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/json/__init__.py\", line 346, in loads\n    return _default_decoder.decode(s)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/json/decoder.py\", line 341, in decode\n    raise JSONDecodeError(\"Extra data\", s, end)\njson.decoder.JSONDecodeError: Extra data: line 1 column 971 (char 970)\n"
+  },
+  {
+   "task_id": "111",
+   "trial": 0,
+   "error": "JSONDecodeError('Extra data: line 1 column 971 (char 970)')",
+   "tb": "        ^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/Projects/support-agent-evals/third_party/tau2-bench/src/tau2/runner/simulation.py\", line 142, in run_simulation\n    reward_info = evaluate_simulation(\n                  ^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/Projects/support-agent-evals/third_party/tau2-bench/src/tau2/evaluator/evaluator.py\", line 227, in evaluate_simulation\n    nl_reward_info = NLEvaluator.calculate_reward(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/Projects/support-agent-evals/third_party/tau2-bench/src/tau2/evaluator/evaluator_nl_assertions.py\", line 42, in calculate_reward\n    nl_assertions_checks = cls.evaluate_nl_assertions(\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/Projects/support-agent-evals/third_party/tau2-bench/src/tau2/evaluator/evaluator_nl_assertions.py\", line 123, in evaluate_nl_assertions\n    result_data = json.loads(assistant_message.content)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/json/__init__.py\", line 346, in loads\n    return _default_decoder.decode(s)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/lizhengtao/.local/share/uv/python/cpython-3.12.15-macos-aarch64-none/lib/python3.12/json/decoder.py\", line 341, in decode\n    raise JSONDecodeError(\"Extra data\", s, end)\njson.decoder.JSONDecodeError: Extra data: line 1 column 971 (char 970)\n"
+  }
+ ]
+}

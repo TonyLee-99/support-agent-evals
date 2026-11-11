@@ -54,6 +54,16 @@ def load_split(name: str) -> list[str]:
     raise ValueError(name)
 
 
+def first_n(split: str, n: int) -> list[str]:
+    """Knob for sample size: the first n tasks of a frozen random order (test: results/splits/test_order.json)."""
+    if split in ("test", "frozen_test"):
+        order = json.loads((SPLITS_DIR / "test_order.json").read_text())["order"]
+    else:
+        order = load_split(split)[:]
+        random.Random(DEV_SEED).shuffle(order)
+    return sorted(order[:n], key=int)
+
+
 if __name__ == "__main__":
     SPLITS_DIR.mkdir(parents=True, exist_ok=True)
     for n, s in make_splits().items():

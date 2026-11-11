@@ -16,7 +16,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-embed = ["fastembed>=0.4"]
+embed = [
+    "fastembed>=0.4",
+]
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.7", "mypy>=1.13"]

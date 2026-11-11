@@ -105,18 +105,35 @@ class AnthropicClient:
             text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
             structured = next((b["input"] for b in data.get("content", [])
                                if b.get("type") == "tool_use" and b.get("name") == "respond"), None)
+            text_as_message = False
+            other = next((b for b in data.get("content", []) if b.get("type") == "tool_use"
+                          and b.get("name") != "respond"), None)
+            if schema is not None and structured is None and other is not None and "action" in schema["properties"]:
+                # The model sometimes calls a tool named in the system prompt directly instead of via `respond`.
+                structured = {"action": "tool_call", "tool_call": {"name": other["name"], "arguments": other["input"]}}
+                text_as_message = None  # marker: mapped a direct tool_use
             if schema is not None and structured is None:
                 try:
                     structured = json.loads(text)
                 except json.JSONDecodeError:
                     structured = None
+                if not isinstance(structured, dict) and text.strip():
+                    # Plain text without a tool call is how the native API says "message to the user"; map it onto
+                    # our schema instead of failing the turn (counted in meta so the rate is reported).
+                    props = schema.get("properties", {})
+                    structured = ({"action": "message", "message": text.strip()} if "action" in props
+                                  else {"message": text.strip(), **({"button": "none", "done": False}
+                                                                    if "button" in props else {})})
+                    text_as_message = True
             resp = LLMResponse(
                 text=text, model=self.model, structured=structured,
                 input_tokens=u.get("input_tokens", 0) + u.get("cache_read_input_tokens", 0)
                 + u.get("cache_creation_input_tokens", 0),
                 output_tokens=u.get("output_tokens", 0), cache_read_tokens=u.get("cache_read_input_tokens", 0),
                 cache_write_tokens=u.get("cache_creation_input_tokens", 0), cost_usd=round(usd, 8),
-                latency_s=round(latency, 3), meta={"stop_reason": data.get("stop_reason"), "attempts": attempt + 1})
+                latency_s=round(latency, 3), meta={"stop_reason": data.get("stop_reason"), "attempts": attempt + 1,
+                                                    "text_as_message": text_as_message,
+                                                    "direct_tool_use": other["name"] if other else None})
             self.cache.put(key, resp.to_dict(), meta={"tag": tag, "backend": self.backend})
             return resp
         raise LLMError(f"anthropic failed after retries: {last}")

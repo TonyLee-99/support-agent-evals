@@ -176,6 +176,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--version", required=True, choices=sorted(VERSIONS) + ["v2"])
     ap.add_argument("--split", default="dev", choices=["dev", "holdout", "all"])
     ap.add_argument("--ids", default="")
+    ap.add_argument("--n", type=int, default=0, help="first N per author from scenarios/run_order.json (0 = all)")
     ap.add_argument("--trial", type=int, default=0)
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--run-id", required=True)
@@ -185,6 +186,10 @@ def main(argv: list[str] | None = None) -> int:
 
         register_v2()
     scen = load_scenarios(args.split)
+    if args.n:
+        order = json.loads((SCEN_DIR / "run_order.json").read_text())["order"]
+        keep = set(order["self"][: args.n] + order["codex"][: args.n])
+        scen = [s for s in scen if s["id"] in keep]
     if args.ids:
         want = set(args.ids.split(","))
         scen = [s for s in scen if s["id"] in want]

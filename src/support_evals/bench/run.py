@@ -90,6 +90,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--agent", required=True)
     ap.add_argument("--split", default="dev")
     ap.add_argument("--tasks", default="", help="comma-separated task ids (subset of split)")
+    ap.add_argument("--n", type=int, default=0, help="first N tasks of the split's frozen random order (0 = all)")
     ap.add_argument("--trials", type=int, default=1)
     ap.add_argument("--trial-offset", type=int, default=0)
     ap.add_argument("--model", default="claude-haiku-5-5")
@@ -117,6 +118,10 @@ def main(argv: list[str] | None = None) -> int:
     from support_evals.llm.claude_cli import UsageLimitError, cli_version
 
     ids = load_split(args.split)
+    if args.n:
+        from support_evals.bench.splits import first_n
+
+        ids = first_n(args.split, args.n)
     if args.tasks:
         want = args.tasks.split(",")
         bad = [t for t in want if t not in ids]

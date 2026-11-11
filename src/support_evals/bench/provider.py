@@ -88,6 +88,10 @@ class ClaudeCLIProvider(CustomLLM):
                 bump(f"{role}:adapter_invalid")
         if turn is None:
             bump(f"{role}:adapter_failed")
+            # Interface failure, not agent behaviour: the simulation is discarded and re-run (count reported).
+            if not hasattr(_tls, "errors"):
+                _tls.errors = []
+            _tls.errors.append(f"adapter_failed: {last_err}")
             raise AdapterError(f"no valid turn after retries: {last_err}")
 
         msg = model_response.choices[0].message
