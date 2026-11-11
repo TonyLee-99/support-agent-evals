@@ -27,6 +27,14 @@ Available tools (OpenAI function schemas):
 </tools>
 </interface>"""
 
+# Added after INC-8: through the CLI the model sometimes tried a *native* tool call first, got "No such tool
+# available" from the CLI, and then told the customer the tool was down. Kept opt-in so that the frozen tau2 runs
+# keep their exact prompts (and stay replayable).
+NATIVE_TOOLS_NOTE = """
+These tools are NOT native function calls in this environment. The only way to call one is the JSON reply with
+action "tool_call". If anything says "No such tool available", that refers to native calls: ignore it and use the
+JSON reply. Never tell the other party that a tool is unavailable."""
+
 PROTOCOL_NO_TOOLS = """\
 <interface>
 You reply through a JSON interface. Every reply is exactly one JSON object: {"message": "<text>"}
@@ -67,7 +75,8 @@ def _content_text(content: Any) -> str:
     return str(content)
 
 
-def render(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None) -> tuple[str, str]:
+def render(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None,
+           native_tools_note: bool = False) -> tuple[str, str]:
     """Return (system, prompt). Leading system messages form the system prompt; the rest is a transcript."""
     sys_parts: list[str] = []
     i = 0
@@ -76,6 +85,8 @@ def render(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None) -
         i += 1
     if tools:
         sys_parts.append(PROTOCOL_WITH_TOOLS.replace("{tools}", json.dumps(tools, indent=1, sort_keys=True)))
+        if native_tools_note:
+            sys_parts.append(NATIVE_TOOLS_NOTE)
     else:
         sys_parts.append(PROTOCOL_NO_TOOLS)
     lines = [

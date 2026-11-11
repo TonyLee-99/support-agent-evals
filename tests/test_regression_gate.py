@@ -26,14 +26,16 @@ def test_cases_are_reviewed_and_well_formed():
             assert c["source"].split(":")[1].endswith(("dev10", "_20")), "mined cases must come from dev runs"
 
 
-def test_gate_passes_for_shipped_version_and_blocks_pre_flywheel_version():
-    assert regress.gate("v2") == 0
-    assert regress.gate("v1") == 1  # v1 still has the invented-outage failures the cases were mined from
+def test_gate_passes_shipped_version_and_blocks_candidates():
+    assert regress.gate("v3") == 0  # shipped: v1 + interface fix (INC-8)
+    assert regress.gate("v1") == 1  # incumbent below the bar
+    assert regress.gate("v2") == 1  # prompt-lesson candidate: new failures vs v1
+    assert regress.gate("broken") == 1
 
 
 def test_gate_fails_on_stale_report(monkeypatch):
     monkeypatch.setattr(regress, "fingerprint", lambda v: "different-prompt")
-    assert regress.gate("v2") == 1
+    assert regress.gate("v3") == 1
 
 
 @pytest.mark.parametrize("prop,content,tool,ok", [
@@ -54,9 +56,9 @@ def test_replay_matches_committed_report(monkeypatch, tmp_path):
     from support_evals import llm
 
     llm._clients.clear()
-    recorded = {r["id"]: r["pass"] for r in json.loads((DIR / "report_v2.json").read_text())["results"]
+    recorded = {r["id"]: r["pass"] for r in json.loads((DIR / "report_v3.json").read_text())["results"]
                 if r["target"] == "service"}
     monkeypatch.setattr(regress, "DIR", tmp_path)  # do not overwrite the committed report
-    rep = regress.run("v2")
+    rep = regress.run("v3")
     fresh = {r["id"]: r["pass"] for r in rep["results"] if r["target"] == "service"}
     assert fresh == recorded

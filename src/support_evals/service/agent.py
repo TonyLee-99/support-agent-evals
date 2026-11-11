@@ -49,6 +49,9 @@ V2_RULES = """Lessons from reviewed failures (dev scenarios only):
 VERSIONS: dict[str, dict[str, Any]] = {
     "baseline": {"instruction": BASE_INSTRUCTION, "checklist": False, "service_rules": False, "lessons": ""},
     "v1": {"instruction": BASE_INSTRUCTION, "checklist": True, "service_rules": True, "lessons": ""},
+    # v3 = v1 + the interface fix found by tracing the dominant failure to the CLI adapter (INC-8)
+    "v3": {"instruction": BASE_INSTRUCTION, "checklist": True, "service_rules": True, "lessons": "",
+           "interface_fix": True},
 }
 
 
@@ -183,7 +186,7 @@ class Engine:
         out: list[dict[str, Any]] = []
         for step in range(MAX_INNER_STEPS):
             msgs = [{"role": "system", "content": system}, *self.messages(cid)]
-            sys_text, prompt = render(msgs, SCHEMAS)
+            sys_text, prompt = render(msgs, SCHEMAS, native_tools_note=VERSIONS[version].get("interface_fix", False))
             parsed = None
             for attempt in range(3):
                 t0 = time.perf_counter()
@@ -295,7 +298,7 @@ def agent_step(version: str, messages: list[dict[str, Any]], sample: Any = 0, mo
     """One agent decision on a fixed conversation prefix (used by regression cases). Same cache key shape as
     Engine._run, so re-running the version that produced the trace replays the recorded step."""
     msgs = [{"role": "system", "content": system_prompt(version)}, *messages]
-    sys_text, prompt = render(msgs, SCHEMAS)
+    sys_text, prompt = render(msgs, SCHEMAS, native_tools_note=VERSIONS[version].get("interface_fix", False))
     resp = get_client(model).complete(sys_text, prompt, schema=tools_schema(TOOL_NAMES), sample=f"{sample}",
                                       tag=f"regress:{version}")
     return parse(resp.structured, TOOL_NAMES, salt=f"{sample}|{len(msgs)}")

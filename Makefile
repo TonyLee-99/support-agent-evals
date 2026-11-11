@@ -3,7 +3,7 @@ N ?= 10
 K ?= 2
 BACKEND ?= anthropic
 SCEN_N ?= 10
-VERSION ?= v2
+VERSION ?= v3
 
 .PHONY: init check lint types test widget gate verify tau2 dev ablations scenarios flywheel regress dashboard screenshots reproduce
 
@@ -49,7 +49,7 @@ ablations:
 	uv run python -m support_evals.report ablations
 
 scenarios:
-	for v in baseline v1 v2; do \
+	for v in baseline v1 v2 v3; do \
 	  SE_LLM_BACKEND=claude_cli uv run python -m support_evals.scenarios --version $$v --split all --n $(SCEN_N) --run-id scen_$${v}_20; \
 	  SE_LLM_BACKEND=claude_cli uv run python -m support_evals.report judge scen_$${v}_20; done
 	uv run python -m support_evals.report scenarios
@@ -60,7 +60,7 @@ flywheel:
 	uv run python -m support_evals.flywheel.regress generate
 
 regress:
-	for v in v1 v2 broken; do SE_LLM_BACKEND=claude_cli uv run python -m support_evals.flywheel.regress run --version $$v; done
+	for v in v1 v2 v3 broken; do SE_LLM_BACKEND=claude_cli uv run python -m support_evals.flywheel.regress run --version $$v; done
 
 dashboard:
 	uv run python -m support_evals.dashboard.build

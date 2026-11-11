@@ -63,8 +63,8 @@ if (t) {
 }
 const sc = D.scenarios;
 if (sc && sc.scen_v1_20) {
-  const v = sc.scen_v2_20 || sc.scen_v1_20, base = sc.scen_baseline_20;
-  card("span4 kpi", `<div class="l">own scenarios - deterministic checks (${sc.scen_v2_20 ? "v2" : "v1"})</div>
+  const vn = sc.scen_v3_20 ? "v3" : "v1", v = sc["scen_" + vn + "_20"], base = sc.scen_baseline_20;
+  card("span4 kpi", `<div class="l">own scenarios - deterministic checks (${vn})</div>
     <div class="v">${pct(v.all.deterministic_pass.rate)}</div>
     <div class="d">baseline ${pct(base.all.deterministic_pass.rate)} · n=${v.all.deterministic_pass.n} (10 self + 10 codex-blind)</div>
     <div class="note">Refund counts, order states, forbidden tools, data-leak strings. Not an LLM score.</div>`);
@@ -93,7 +93,7 @@ if (t) {
 }
 if (sc) {
   const rows = [];
-  [["scen_baseline_20", "baseline"], ["scen_v1_20", "v1"], ["scen_v2_20", "v2 (flywheel)"]].forEach(([r, l]) => {
+  [["scen_baseline_20", "baseline"], ["scen_v1_20", "v1"], ["scen_v2_20", "v2 (lessons)"], ["scen_v3_20", "v3 (interface fix)"]].forEach(([r, l]) => {
     if (!sc[r]) return; const d = sc[r].all.deterministic_pass;
     rows.push({label: `service ${l}`, v: d.rate, lo: d.ci95[0], hi: d.ci95[1], color: l === "baseline" ? "#c9c2b4" : "#0f766e"});
     const j = sc[r].all.judge_pass; if (j) rows.push({label: `  judge ${l}`, v: j.rate, lo: j.ci95[0], hi: j.ci95[1], color: "#8fb9b2"});
@@ -134,9 +134,9 @@ if (tx) {
 }
 const rg = D.regression;
 if (rg && rg.v1) {
-  card("span6", `<h2>CI regression gate</h2><table><tr><th>agent version</th><th class="n">cases</th><th class="n">service pass</th><th>gate (min 0.8)</th></tr>
-    ${["v1", "v2", "broken"].filter((v) => rg[v]).map((v) => `<tr><td>${v}</td><td class="n">${rg[v].service_n}</td><td class="n">${pct(rg[v].service_pass_rate)}</td><td><span class="pill ${rg[v].service_pass_rate >= 0.8 ? "pass" : "fail"}">${rg[v].service_pass_rate >= 0.8 ? "PASS" : "FAIL"}</span></td></tr>`).join("")}</table>
-    <div class="note">Cases are auto-generated from labelled dev failures (prefix + property of the next step), reviewed, then replayed offline in CI.</div>`);
+  card("span6", `<h2>CI regression gate</h2><table><tr><th>agent version</th><th class="n">cases</th><th class="n">service pass</th><th>gate</th></tr>
+    ${["v1", "v2", "v3", "broken"].filter((v) => rg[v]).map((v) => `<tr><td>${v}</td><td class="n">${rg[v].service_n}</td><td class="n">${pct(rg[v].service_pass_rate)}</td><td><span class="pill ${rg[v].gate === "PASS" ? "pass" : "fail"}">${rg[v].gate || "-"}</span></td></tr>`).join("")}</table>
+    <div class="note">Cases: auto-generated from labelled dev failures (prefix + property of the next step) plus hand-written safety seeds; each case drawn 3 times and passes only if all draws pass; gate = pass rate >= 0.8 and no case that the incumbent (v1) passes may fail. Replayed offline in CI.</div>`);
 }
 const jd = D.judge;
 if (jd) {

@@ -73,7 +73,10 @@ def check(prop: dict[str, Any], content: str | None, tool: str | None) -> bool:
     raise ValueError(t)
 
 
-SAMPLES = 3  # LLM steps are stochastic: a case passes if the property holds in a majority of 3 draws
+# LLM steps are stochastic. Each case is drawn SAMPLES times with fresh sample indices 1..SAMPLES (index 0 is the
+# recorded draw that failed, which would bias the score against the version it was mined from), and passes only
+# if the property holds in every draw - the pass^k idea applied to regression cases.
+SAMPLES = 3
 
 
 def step_service(case: dict[str, Any], version: str, sample: int = 0) -> tuple[str | None, str | None]:
@@ -104,9 +107,11 @@ def step_tau2(case: dict[str, Any], agent_name: str) -> tuple[str | None, str | 
 
 
 def fingerprint(version: str) -> str:
-    from support_evals.service.agent import system_prompt
+    from support_evals.bench.emulation import NATIVE_TOOLS_NOTE
+    from support_evals.service.agent import VERSIONS, system_prompt
 
-    return hashlib.sha256(system_prompt(version).encode()).hexdigest()[:16]
+    note = NATIVE_TOOLS_NOTE if VERSIONS[version].get("interface_fix") else ""
+    return hashlib.sha256((system_prompt(version) + note).encode()).hexdigest()[:16]
 
 
 def run(version: str, tau2_agent: str = "policy_agent", only_approved: bool = True) -> dict[str, Any]:
@@ -117,11 +122,11 @@ def run(version: str, tau2_agent: str = "policy_agent", only_approved: bool = Tr
             continue
         try:
             if c["target"] == "service":
-                draws = [step_service(c, version, s) for s in range(SAMPLES)]
+                draws = [step_service(c, version, s) for s in range(1, SAMPLES + 1)]
             else:
                 draws = [step_tau2(c, tau2_agent)]  # tau2 agent is frozen; one recorded draw
             votes = [check(c["property"], content, tool) for content, tool in draws]
-            ok = sum(votes) * 2 > len(votes)
+            ok = all(votes)
             results.append({"id": c["id"], "target": c["target"], "category": c["category"], "pass": ok,
                             "votes": votes, "tool": draws[0][1], "content": (draws[0][0] or "")[:300]})
         except Exception as e:  # a replay miss or adapter failure is a failed case, never silently skipped

@@ -40,7 +40,7 @@ def _replays() -> list[dict[str, Any]]:
                     msgs.append({"r": "agent" if m["role"] == "assistant" else "customer", "t": m.get("content") or ""})
             out.append({"id": f"tau2 task {s['task_id']} - {label}", "kind": "tau2",
                         "outcome": "pass" if (s.get("reward_info") or {}).get("reward") == 1 else "fail", "msgs": msgs})
-    for run in ("scen_baseline_20", "scen_v1_20", "scen_v2_20"):
+    for run in ("scen_baseline_20", "scen_v1_20", "scen_v3_20"):
         p = R / "scenarios" / run / "runs.jsonl"
         if not p.exists():
             continue
@@ -69,14 +69,21 @@ def build() -> Path:
         "ablations": _load(R / "ablations.json"),
         "scenarios": _load(R / "scenarios_summary.json"),
         "taxonomy": _load(R / "flywheel/taxonomy.json"),
-        "regression": {v: _load(R / "regression" / f"report_{v}.json") for v in ("v1", "v2", "broken")},
+        "regression": {v: _load(R / "regression" / f"report_{v}.json") for v in ("v1", "v2", "v3", "broken")},
         "judge": _load(R / "judge_calibration.json"),
         "ledger": _load(R / "ledger_summary.json"),
         "replays": _replays(),
     }
-    for v in data["regression"].values():
+    from support_evals.flywheel.regress import gate
+
+    for name, v in data["regression"].items():
         if v:
             v.pop("results", None)
+            import contextlib
+            import io
+
+            with contextlib.redirect_stdout(io.StringIO()):
+                v["gate"] = "PASS" if gate(name) == 0 else "FAIL"
     OUT.mkdir(parents=True, exist_ok=True)
     html = (Path(__file__).parent / "template.html").read_text().replace("__DATA__", json.dumps(data))
     (OUT / "index.html").write_text(html)
