@@ -121,7 +121,9 @@ def run_scenario(sc: dict[str, Any], version: str, trial: int, db_dir: Path) -> 
                 view.append(_view_line(m))
                 if m["role"] == "confirmation":
                     pending = m["action_id"]
-        if reply.get("done") or eng.conversation(cid)["state"] == "handed_off":
+        if eng.conversation(cid)["state"] == "handed_off":
+            break
+        if reply.get("done") and not pending:  # a card that just appeared still needs the customer's click
             break
     return {"scenario_id": sc["id"], "version": version, "trial": trial, "conversation_id": cid,
             "wall_s": round(time.time() - t0, 1), "customer_turns": turns,

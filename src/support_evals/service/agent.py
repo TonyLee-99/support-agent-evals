@@ -96,6 +96,12 @@ class Engine:
         self.store.conn().execute("INSERT INTO conversations (conversation_id, principal, identified_user, state,"
                                   " agent_version) VALUES (?,?,?,?,?)",
                                   (cid, principal, None, "open", f"{version}|{sample}"))
+        # Platform fact, identical for every agent version: who the website says is signed in.
+        ctx = (f"Session context: the customer is signed in on the website as user_id {principal} (verified by "
+               "login). Tools act only on this account." if principal else
+               "Session context: the customer is a guest (not signed in). You may identify them for read-only help; "
+               "changes to orders require them to sign in.")
+        self._append(cid, {"role": "system", "content": ctx})
         self._append(cid, {"role": "assistant", "content": "Hi! How can I help you today?"})
         return cid
 
