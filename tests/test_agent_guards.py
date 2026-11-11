@@ -4,7 +4,13 @@ import pytest
 from tau2.data_model.message import AssistantMessage, ToolCall, ToolMessage, UserMessage
 from tau2.domains.retail.environment import get_environment
 
-from support_evals.bench.agents import ALL_FLAGS, PolicyAgent, has_fresh_affirmation, is_affirmation, make_factory
+from support_evals.bench.agents import (
+    ALL_FLAGS,
+    PolicyAgent,
+    has_fresh_affirmation,
+    is_affirmation,
+    make_factory,
+)
 
 ORDER = {"order_id": "#W1", "user_id": "u1", "status": "delivered", "items": [
     {"item_id": "i1", "product_id": "p1", "price": 10.0}], "payment_history": [{"payment_method_id": "card_1"}]}

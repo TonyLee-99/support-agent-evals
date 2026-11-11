@@ -16,6 +16,7 @@ from typing import Any
 
 from support_evals.bench.emulation import AdapterError, parse, render, tools_schema
 from support_evals.llm import HAIKU, get_client
+from support_evals.prompts import PLANNER_INSTRUCTION
 from support_evals.service import guards
 from support_evals.service.store import Store
 from support_evals.service.tools import WRITE_TOOLS, Session, ToolError, Tools
@@ -57,8 +58,6 @@ def register_version(name: str, lessons: str) -> None:
 
 
 def system_prompt(version: str) -> str:
-    from support_evals.bench.agents import PLANNER_INSTRUCTION
-
     v = VERSIONS[version]
     parts = [f"<instructions>\n{v['instruction']}\n</instructions>"]
     if v["checklist"]:
@@ -280,7 +279,7 @@ class Engine:
                 "input_tokens": sum(s.get("input_tokens", 0) for s in llm),
                 "output_tokens": sum(s.get("output_tokens", 0) for s in llm),
                 "cost_usd": round(sum(s.get("cost_usd", 0.0) for s in llm), 6),
-                "guard_flags": sum(1 for s in spans if s["kind"] == "guard" and s.get("flagged", True)
-                                   and s["name"] != "injection_user_text" or s.get("flagged") is True),
+                "guard_flags": sum(1 for s in spans if s["kind"] == "guard"
+                                   and (s["name"] != "injection_user_text" or s.get("flagged"))),
             },
         }

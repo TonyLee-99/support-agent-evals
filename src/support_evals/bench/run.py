@@ -17,7 +17,6 @@ import threading
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 from typing import Any
 
 from support_evals.llm.cache import ROOT
