@@ -46,6 +46,25 @@ def bump(key: str, n: int = 1) -> None:
         STATS[key] += n
 
 
+def _first_json_object(text: str) -> str:
+    """Keep only the first JSON object when the grader appends a second one (INC-5/INC-9 'Extra data').
+    Valid JSON passes through unchanged, so recorded runs replay identically."""
+    try:
+        json.loads(text)
+        return text
+    except json.JSONDecodeError:
+        pass
+    start = text.find("{")
+    if start < 0:
+        return text
+    try:
+        obj, _ = json.JSONDecoder().raw_decode(text[start:])
+    except json.JSONDecodeError:
+        return text
+    bump("unknown:first_json_object")
+    return json.dumps(obj)
+
+
 class ClaudeCLIProvider(CustomLLM):
     def completion(self, model, messages, api_base, custom_prompt_dict, model_response, print_verbose, encoding,
                    api_key, logging_obj, optional_params, acompletion=None, litellm_params=None, logger_fn=None,
@@ -105,6 +124,8 @@ class ClaudeCLIProvider(CustomLLM):
             model_response.choices[0].finish_reason = "tool_calls"
         else:
             msg.content = turn.content
+            if role == "unknown" and turn.content:
+                msg.content = _first_json_object(turn.content)  # tau2's NL grader json.loads the raw text
             model_response.choices[0].finish_reason = "stop"
         model_response.model = model
         model_response.usage = litellm.Usage(prompt_tokens=totals["in"], completion_tokens=totals["out"],

@@ -115,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("no API key in env or keychain")
         os.environ["ANTHROPIC_API_KEY"] = key  # process memory only; never written anywhere
 
-    setup(args.judge_model, args.prefix)
+    setup(args.judge_model, "claudecli")  # NL grader keeps the round-2 JSON path: tau2 json.loads its raw text
     from tau2.runner.helpers import get_tasks
 
     from support_evals.bench.provider import STATS

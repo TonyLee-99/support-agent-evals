@@ -180,8 +180,45 @@ def ledger() -> None:
     print(json.dumps(out))
 
 
+def invalid_rate(run: str) -> dict[str, Any]:
+    """Share of agent LLM turns the interface had to reject and retry (wrapper: bad JSON; native: empty turn)."""
+    st = _meta(run).get("adapter_stats", {})
+    if any(k.startswith("native:") for k in st):
+        calls, bad = st.get("native:agent:calls", 0), st.get("native:agent:invalid_empty", 0)
+    else:
+        calls, bad = st.get("agent:calls", 0), st.get("agent:adapter_invalid", 0)
+    return {"agent_calls": calls, "invalid": bad, "rate": round(bad / calls, 4) if calls else None}
+
+
+def round3() -> None:
+    out: dict[str, Any] = {"prereg": "docs/PREREG_round3.md", "dev": {}, "test": None}
+    for run in ("llm_agent_dev30", "policy_agent_dev30", "policy_agent_r3_dev30", "policy_agent_r3b_dev30",
+                "llm_agent_dev10_native", "policy_agent_r3_dev10_native"):
+        p = R / "tau2" / run / "sims.jsonl.gz"
+        if p.exists():
+            bt = successes_by_task(load_sims(R / "tau2" / run))
+            out["dev"][run] = {**summarize(bt, [1]), "interface": _meta(run).get("interface", "wrapper"),
+                               "invalid": invalid_rate(run)}
+    if (R / "tau2" / "policy_agent_r3_test40_native" / "sims.jsonl.gz").exists():
+        k = max(len(_meta("policy_agent_r3_test40_native")["trials"]), 1)
+        t = tau2_pair("llm_agent_test40_native", "policy_agent_r3_test40_native", k)
+        for name, run in (("baseline", "llm_agent_test40_native"), ("policy_agent", "policy_agent_r3_test40_native")):
+            t["runs"][name]["invalid"] = invalid_rate(run)
+        t["differences_from_leaderboard"] = [d.format(n=40, k=k).replace(
+            "via a JSON 'respond' tool on the Messages API (not native per-tool function calling)",
+            "native Messages-API tool_use, one call per turn") for d in DIFFS]
+        out["test"] = t
+    out["wrapper_test40_invalid"] = {r: invalid_rate(r) for r in ("llm_agent_test40_api", "policy_agent_test40_api")}
+    (R / "round3_summary.json").write_text(json.dumps(out, indent=1))
+    print(json.dumps({k: (v.get("pass^1"), v["invalid"]) for k, v in out["dev"].items()}))
+    if out["test"]:
+        print(out["test"]["runs"]["baseline"]["pass^1"], out["test"]["runs"]["policy_agent"]["pass^1"],
+              out["test"]["comparison"]["pass^1"])
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
-    {"tau2": tau2, "ablations": ablations, "scenarios": scenarios, "ledger": ledger}.get(cmd, lambda: None)()
+    {"tau2": tau2, "ablations": ablations, "scenarios": scenarios, "ledger": ledger, "round3": round3}.get(
+        cmd, lambda: None)()
     if cmd == "judge":
         judge_run(sys.argv[2])
