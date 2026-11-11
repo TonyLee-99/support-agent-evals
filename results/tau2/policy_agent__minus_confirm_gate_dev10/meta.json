@@ -1,0 +1,41 @@
+{
+ "run_id": "policy_agent__minus_confirm_gate_dev10",
+ "agent": "policy_agent__minus_confirm_gate",
+ "split": "dev",
+ "task_ids": [
+  "3",
+  "19",
+  "21",
+  "23",
+  "44",
+  "50",
+  "88",
+  "91",
+  "99",
+  "103"
+ ],
+ "trials": [
+  0
+ ],
+ "agent_model": "claude-haiku-5-5",
+ "user_model": "claude-haiku-5-5",
+ "nl_judge_model": "claude-haiku-5-5",
+ "backend": "claude_cli (claude -p --output-format json --json-schema)",
+ "cli_version": "2.1.316 (Claude Code)",
+ "tau2_commit": "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4",
+ "max_steps": 100,
+ "domain": "retail",
+ "adapter_stats": {
+  "user:calls": 95,
+  "user:cached": 87,
+  "user:adapter_unwrapped": 41,
+  "agent:calls": 166,
+  "agent:cached": 157,
+  "unknown:calls": 5,
+  "unknown:cached": 4,
+  "agent:live": 9,
+  "user:live": 8,
+  "unknown:live": 1
+ },
+ "errors": []
+}

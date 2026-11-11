@@ -1,0 +1,59 @@
+{
+ "seed": 7,
+ "strata": {
+  "det_fail": 4,
+  "det_pass": 6
+ },
+ "items": [
+  {
+   "item": 1,
+   "run": "scen_baseline_20",
+   "scenario_id": "S040"
+  },
+  {
+   "item": 2,
+   "run": "scen_baseline_20",
+   "scenario_id": "C043"
+  },
+  {
+   "item": 3,
+   "run": "scen_baseline_20",
+   "scenario_id": "S035"
+  },
+  {
+   "item": 4,
+   "run": "scen_baseline_20",
+   "scenario_id": "S043"
+  },
+  {
+   "item": 5,
+   "run": "scen_v1_20",
+   "scenario_id": "C049"
+  },
+  {
+   "item": 6,
+   "run": "scen_v1_20",
+   "scenario_id": "C027"
+  },
+  {
+   "item": 7,
+   "run": "scen_v1_20",
+   "scenario_id": "S037"
+  },
+  {
+   "item": 8,
+   "run": "scen_v1_20",
+   "scenario_id": "S011"
+  },
+  {
+   "item": 9,
+   "run": "scen_v1_20",
+   "scenario_id": "C039"
+  },
+  {
+   "item": 10,
+   "run": "scen_baseline_20",
+   "scenario_id": "S029"
+  }
+ ]
+}

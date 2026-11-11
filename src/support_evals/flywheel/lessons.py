@@ -6,8 +6,10 @@ codebook category it addresses. `broken` is a deliberately bad version used to p
 
 from support_evals.service.agent import BASE_INSTRUCTION, VERSIONS, register_version
 
-LESSONS = """- (hallucinated_fact) Only report what tool results say. Never claim a lookup, transfer or system failed unless
-  a tool result in this conversation shows an error.
+LESSONS = """- (hallucinated_fact, 15 of 18 labelled dev failures) The tools listed in <tools> are available and working.
+  To use one, reply with action=tool_call. Never tell the customer that a lookup, a transfer or any tool is
+  unavailable, not responding or failed unless a tool result in THIS conversation shows an error - call the tool.
+- (hallucinated_fact) After the customer confirms, make the tool call; never say a change is done without it.
 - (no_confirmation / premature_end) After proposing a write, show the details and wait: the customer confirms with
   the card button; do not say the change is done until an "Action update" confirms it.
 - (false_refusal) If the session context says the customer is signed in, they are already verified: do not ask

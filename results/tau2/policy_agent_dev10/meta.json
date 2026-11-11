@@ -24,5 +24,18 @@
  "cli_version": "2.1.316 (Claude Code)",
  "tau2_commit": "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4",
  "max_steps": 100,
- "domain": "retail"
+ "domain": "retail",
+ "adapter_stats": {
+  "user:calls": 99,
+  "user:cached": 26,
+  "user:adapter_unwrapped": 41,
+  "agent:calls": 176,
+  "agent:cached": 64,
+  "unknown:calls": 5,
+  "unknown:cached": 3,
+  "user:live": 73,
+  "agent:live": 112,
+  "unknown:live": 2
+ },
+ "errors": []
 }

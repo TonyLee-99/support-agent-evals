@@ -1,0 +1,125 @@
+{
+ "n_failures": 19,
+ "k": 4,
+ "embedding_model": "BAAI/bge-small-en-v1.5",
+ "purity_vs_codebook": 0.947,
+ "category_counts": {
+  "incomplete_action": 2,
+  "hallucinated_fact": 16,
+  "harness_error": 1
+ },
+ "by_agent_version": {
+  "llm_agent": {
+   "incomplete_action": 1,
+   "hallucinated_fact": 3
+  },
+  "policy_agent": {
+   "incomplete_action": 1,
+   "hallucinated_fact": 1
+  },
+  "baseline": {
+   "harness_error": 1,
+   "hallucinated_fact": 6
+  },
+  "v1": {
+   "hallucinated_fact": 6
+  }
+ },
+ "clusters": [
+  {
+   "cluster": 2,
+   "size": 15,
+   "top_terms": [
+    "tool",
+    "transfer",
+    "lookup",
+    "customer"
+   ],
+   "labels": {
+    "hallucinated_fact": 15
+   },
+   "examples": [
+    "After the customer confirmed the grill modification, the agent never called the modify tool but told the customer the system had returned errors on two attempts. It invented a tool failure that no tool result supported, and the grill change was never executed.",
+    "After the customer confirmed the lamp swap, the agent never called the order-modification tool but told the customer it had tried and that the tool was unavailable. It then repeated this fabricated failure across later turns instead of making the write.",
+    "After the customer confirmed the pending-order address change, the agent claimed the address-change tool was unavailable without ever calling it, so the requested write was never attempted. It then repeated the unsupported outage claim for the transfer tool, and the customer was left with a fabricated tool failure instead of a completed change."
+   ],
+   "sources": [
+    "tau2:llm_agent_dev10:23:0",
+    "tau2:llm_agent_dev10:44:0",
+    "tau2:policy_agent_dev10:103:0",
+    "scenario:scen_baseline_20:S035",
+    "scenario:scen_baseline_20:S037",
+    "scenario:scen_baseline_20:S049",
+    "scenario:scen_baseline_20:C027",
+    "scenario:scen_baseline_20:C039",
+    "scenario:scen_baseline_20:C049",
+    "scenario:scen_v1_20:S011",
+    "scenario:scen_v1_20:S035",
+    "scenario:scen_v1_20:S049",
+    "scenario:scen_v1_20:C027",
+    "scenario:scen_v1_20:C039",
+    "scenario:scen_v1_20:C049"
+   ]
+  },
+  {
+   "cluster": 0,
+   "size": 2,
+   "top_terms": [
+    "return",
+    "order",
+    "delivered",
+    "status"
+   ],
+   "labels": {
+    "incomplete_action": 1,
+    "harness_error": 1
+   },
+   "examples": [
+    "The agent submitted the exchanges first, which moved the order out of 'delivered' status and made the water bottle return impossible. It should have processed the delivered-order return before any exchange, or sequenced the actions so none blocked another.",
+    "The customer's confirmation was resolved by a harness-injected \"executed\" result rather than a real tool call, so the backend order state never changed (still open, zero refunds). The agent reported the return as submitted based on that log without re-checking the order status."
+   ],
+   "sources": [
+    "tau2:policy_agent_dev10:19:0",
+    "scenario:scen_baseline_20:S011"
+   ]
+  },
+  {
+   "cluster": 1,
+   "size": 1,
+   "top_terms": [
+    "number",
+    "tracking",
+    "tracking number",
+    "number agent"
+   ],
+   "labels": {
+    "hallucinated_fact": 1
+   },
+   "examples": [
+    "When asked for the tracking number, the agent stated a number without making a lookup in that turn, and the value does not match the expected tracking number. The agent should have retrieved the tracking number from order data or said it could not find it."
+   ],
+   "sources": [
+    "tau2:llm_agent_dev10:103:0"
+   ]
+  },
+  {
+   "cluster": 3,
+   "size": 1,
+   "top_terms": [
+    "product",
+    "available",
+    "shirt product",
+    "shirt"
+   ],
+   "labels": {
+    "incomplete_action": 1
+   },
+   "examples": [
+    "The agent looked up only one product ID for \"T-Shirt\" from the product-type list and did not check for other t-shirt product entries. It then reported a variant count (11 total, 9 available) based only on that single product, which the evaluator found to be wrong (expected 10 available)."
+   ],
+   "sources": [
+    "tau2:llm_agent_dev10:3:0"
+   ]
+  }
+ ]
+}
