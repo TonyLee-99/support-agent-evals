@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>support-agent-evals - eval dashboard</title>
+<style>
+:root{--paper:#f7f5f0;--ink:#1b1f2a;--muted:#6a6f7c;--line:#e3dfd6;--card:#fffdf9;--a:#0f766e;--b:#b0a99a;--bad:#b4442c;--warn:#b7791f;
+--mono:ui-monospace,"SF Mono",Menlo,monospace;--sans:"Inter",system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans)}
+header{padding:40px 56px 24px;border-bottom:1px solid var(--line)}
+.kicker{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--a)}
+h1{font-size:30px;letter-spacing:-.02em;margin:10px 0 6px}h2{font-size:18px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);max-width:80ch}main{padding:28px 56px 64px;display:grid;gap:22px;grid-template-columns:repeat(12,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+.span4{grid-column:span 4}.span6{grid-column:span 6}.span8{grid-column:span 8}.span12{grid-column:span 12}
+.kpi .v{font:600 34px/1.1 var(--mono);letter-spacing:-.02em}.kpi .l{color:var(--muted);font-size:13px}
+.kpi .d{font:13px var(--mono);margin-top:6px}.up{color:var(--a)}.down{color:var(--bad)}
+.note{color:var(--muted);font-size:12.5px;margin-top:8px}table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--line);padding:6px 8px}
+td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:top}td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
+.pill{display:inline-block;font:600 11px var(--mono);padding:2px 7px;border-radius:99px;border:1px solid var(--line)}
+.pass{color:var(--a);border-color:#9fd3c8}.fail{color:var(--bad);border-color:#e7b3a6}
+select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;max-width:100%}
+.replay{max-height:520px;overflow:auto;margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.m{padding:7px 11px;border-radius:10px;max-width:80%;white-space:pre-wrap;font-size:13.5px}
+.m.customer{background:#1b1f2a;color:#fff;align-self:flex-end}.m.agent{background:#efece5}
+.m.tool,.m.result,.m.event{font:12px/1.4 var(--mono);color:var(--muted);background:transparent;border-left:2px solid var(--line);border-radius:0;max-width:100%}
+.m.tool{border-color:var(--a);color:#155e57}.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:6px 0}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+svg text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+@media(max-width:900px){main{padding:20px}.span4,.span6,.span8{grid-column:span 12}header{padding:28px 20px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">support-agent-evals · recorded runs only</div>
+  <h1>Measuring a support agent honestly</h1>
+  <div class="sub" id="sub"></div>
+</header>
+<main id="main"></main>
+<script>
+const D = __DATA__;
+const $ = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct = (x) => x == null ? "–" : (100 * x).toFixed(0) + "%";
+const main = document.getElementById("main");
+const card = (cls, html) => main.appendChild($(`<section class="card ${cls}">${html}</section>`));
+
+const t = D.tau2;
+if (t) {
+  const b = t.runs.baseline, p = t.runs.policy_agent, c = t.comparison["pass^1"];
+  document.getElementById("sub").textContent =
+    `tau2-bench retail, frozen ${b.n_tasks}-task subset of the official test split, k=${b.n_trials_min} trials, ` +
+    `agent + user simulator = ${b.config.agent_model}. Not leaderboard-comparable (see differences below).`;
+  card("span4 kpi", `<div class="l">pass^1 - policy agent</div><div class="v">${pct(p["pass^1"].mean)}</div>
+    <div class="d">95% CI ${pct(p["pass^1"].ci95[0])}–${pct(p["pass^1"].ci95[1])}</div>
+    <div class="d ${c.diff >= 0 ? "up" : "down"}">${c.diff >= 0 ? "+" : ""}${(100*c.diff).toFixed(0)} pts vs baseline ${pct(b["pass^1"].mean)} (paired CI ${(100*c.ci95[0]).toFixed(0)} to ${(100*c.ci95[1]).toFixed(0)})</div>`);
+  const k = `pass^${b.n_trials_min}`;
+  card("span4 kpi", `<div class="l">${k} - reliability across trials</div><div class="v">${pct(p[k].mean)}</div>
+    <div class="d">baseline ${pct(b[k].mean)} · CI ${pct(p[k].ci95[0])}–${pct(p[k].ci95[1])}</div>
+    <div class="note">Share of tasks solved on every one of k runs. Averages hide this.</div>`);
+}
+const sc = D.scenarios;
+if (sc && sc.scen_v1_20) {
+  const v = sc.scen_v2_20 || sc.scen_v1_20, base = sc.scen_baseline_20;
+  card("span4 kpi", `<div class="l">own scenarios - deterministic checks (${sc.scen_v2_20 ? "v2" : "v1"})</div>
+    <div class="v">${pct(v.all.deterministic_pass.rate)}</div>
+    <div class="d">baseline ${pct(base.all.deterministic_pass.rate)} · n=${v.all.deterministic_pass.n} (10 self + 10 codex-blind)</div>
+    <div class="note">Refund counts, order states, forbidden tools, data-leak strings. Not an LLM score.</div>`);
+}
+
+// pass^k bar chart with CI whiskers
+function bars(rows, title, note) {
+  const W = 560, H = 210, L = 150, max = 1;
+  let y = 18, g = "";
+  rows.forEach((r) => {
+    const w = (W - L - 40) * r.v / max, lo = L + (W - L - 40) * r.lo, hi = L + (W - L - 40) * r.hi;
+    g += `<text x="0" y="${y + 13}">${esc(r.label)}</text><rect x="${L}" y="${y}" width="${w}" height="18" rx="3" fill="${r.color}"/>
+      <line x1="${lo}" x2="${hi}" y1="${y + 9}" y2="${y + 9}" stroke="#1b1f2a" stroke-width="1.3"/>
+      <line x1="${lo}" x2="${lo}" y1="${y + 4}" y2="${y + 14}" stroke="#1b1f2a"/><line x1="${hi}" x2="${hi}" y1="${y + 4}" y2="${y + 14}" stroke="#1b1f2a"/>
+      <text x="${L + w + 6}" y="${y + 13}" style="fill:#1b1f2a">${pct(r.v)}</text>`;
+    y += 30;
+  });
+  return `<h2>${title}</h2><svg viewBox="0 0 ${W} ${y + 6}" width="100%">${g}</svg><div class="note">${note}</div>`;
+}
+if (t) {
+  const rows = [];
+  ["pass^1", "pass^2"].forEach((k) => ["baseline", "policy_agent"].forEach((n) => {
+    const s = t.runs[n][k]; if (s) rows.push({label: `${n === "baseline" ? "baseline" : "policy agent"} ${k}`, v: s.mean, lo: s.ci95[0], hi: s.ci95[1], color: n === "baseline" ? "#c9c2b4" : "#0f766e"});
+  }));
+  card("span6", bars(rows, "tau2-bench retail (frozen test subset)", "Whiskers: 95% bootstrap CI over tasks. Small n: read the CI, not the bar."));
+}
+if (sc) {
+  const rows = [];
+  [["scen_baseline_20", "baseline"], ["scen_v1_20", "v1"], ["scen_v2_20", "v2 (flywheel)"]].forEach(([r, l]) => {
+    if (!sc[r]) return; const d = sc[r].all.deterministic_pass;
+    rows.push({label: `service ${l}`, v: d.rate, lo: d.ci95[0], hi: d.ci95[1], color: l === "baseline" ? "#c9c2b4" : "#0f766e"});
+    const j = sc[r].all.judge_pass; if (j) rows.push({label: `  judge ${l}`, v: j.rate, lo: j.ci95[0], hi: j.ci95[1], color: "#8fb9b2"});
+  });
+  card("span6", bars(rows, "Own scenarios by agent version", "Deterministic checks (dark) and LLM judge (light). Same 20 scenarios each version."));
+}
+if (t) {
+  const r = (n) => t.runs[n];
+  card("span12", `<h2>What differs from the public leaderboard</h2><ul>${t.differences_from_leaderboard.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+    <table><tr><th>run</th><th>agent</th><th>backend</th><th class="n">sims</th><th class="n">discarded (infra)</th><th class="n">DB-only pass^1</th><th class="n">mean wall s</th></tr>
+    ${["baseline", "policy_agent"].map((n) => `<tr><td>${n}</td><td>${esc(r(n).config.agent)}</td><td>${esc(r(n).config.backend)}</td><td class="n">${r(n).n_sims}</td><td class="n">${r(n).discarded_sims}</td><td class="n">${pct(r(n).db_only["pass^1"].mean)}</td><td class="n">${r(n).mean_wall_s}</td></tr>`).join("")}</table>`);
+}
+const ab = D.ablations;
+if (ab) {
+  card("span6", `<h2>Ablations (dev, exploratory)</h2><table><tr><th>variant</th><th class="n">pass^1</th><th class="n">vs full</th></tr>
+    ${ab.rows.map((r) => `<tr><td>${esc(r.variant)}</td><td class="n">${r["pass^1"] ? pct(r["pass^1"].mean) : esc(r.status)}</td><td class="n">${r.vs_full ? (r.vs_full.diff >= 0 ? "+" : "") + (100 * r.vs_full.diff).toFixed(0) + " pts" : ""}</td></tr>`).join("")}</table>
+    <div class="note">${esc(ab.note)}</div>`);
+}
+const tx = D.taxonomy;
+if (tx) {
+  const cats = Object.keys(tx.category_counts).sort((a, b) => tx.category_counts[b] - tx.category_counts[a]);
+  const vers = Object.keys(tx.by_agent_version);
+  const pal = ["#0f766e", "#b7791f", "#b4442c", "#3b5b92", "#7a5c99", "#6a6f7c", "#2f855a", "#c05621", "#4a5568", "#9c4221", "#285e61", "#744210"];
+  const W = 560, L = 150; let y = 10, g = "";
+  vers.forEach((v) => {
+    const tot = Object.values(tx.by_agent_version[v]).reduce((a, b) => a + b, 0); let x = L;
+    g += `<text x="0" y="${y + 13}">${esc(v)} (${tot})</text>`;
+    cats.forEach((c, i) => { const n = tx.by_agent_version[v][c] || 0; const w = (W - L - 10) * n / Math.max(...vers.map((vv) => Object.values(tx.by_agent_version[vv]).reduce((a, b) => a + b, 0)));
+      if (n) g += `<rect x="${x}" y="${y}" width="${w}" height="18" fill="${pal[i % pal.length]}"><title>${c}: ${n}</title></rect>`; x += w; });
+    y += 28;
+  });
+  card("span6", `<h2>Failure taxonomy by agent version (dev failures)</h2>
+    <div class="legend">${cats.map((c, i) => `<span><span class="sw" style="background:${pal[i % pal.length]}"></span>${c} ${tx.category_counts[c]}</span>`).join("")}</div>
+    <svg viewBox="0 0 ${W} ${y}" width="100%">${g}</svg>
+    <div class="note">${tx.n_failures} labelled failures · ${tx.k} embedding clusters (${esc(tx.embedding_model)}) · purity vs codebook ${tx.purity_vs_codebook}</div>`);
+  card("span12", `<h2>Embedding clusters of root causes</h2><table><tr><th class="n">size</th><th>top terms</th><th>codebook labels</th><th>example root cause</th></tr>
+    ${tx.clusters.map((c) => `<tr><td class="n">${c.size}</td><td>${esc(c.top_terms.join(", "))}</td><td>${esc(Object.entries(c.labels).map(([k, v]) => k + " " + v).join(", "))}</td><td>${esc(c.examples[0])}</td></tr>`).join("")}</table>`);
+}
+const rg = D.regression;
+if (rg && rg.v1) {
+  card("span6", `<h2>CI regression gate</h2><table><tr><th>agent version</th><th class="n">cases</th><th class="n">service pass</th><th>gate (min 0.8)</th></tr>
+    ${["v1", "v2", "broken"].filter((v) => rg[v]).map((v) => `<tr><td>${v}</td><td class="n">${rg[v].service_n}</td><td class="n">${pct(rg[v].service_pass_rate)}</td><td><span class="pill ${rg[v].service_pass_rate >= 0.8 ? "pass" : "fail"}">${rg[v].service_pass_rate >= 0.8 ? "PASS" : "FAIL"}</span></td></tr>`).join("")}</table>
+    <div class="note">Cases are auto-generated from labelled dev failures (prefix + property of the next step), reviewed, then replayed offline in CI.</div>`);
+}
+const jd = D.judge;
+if (jd) {
+  card("span6", `<h2>LLM-judge calibration</h2><table><tr><th>pair</th><th class="n">agreement</th><th class="n">Cohen κ</th><th class="n">κ 95% CI</th></tr>
+    ${Object.entries(jd.pairs).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="n">${pct(v.agreement)}</td><td class="n">${v.kappa == null ? "–" : v.kappa.toFixed(2)}</td><td class="n">${v.kappa_ci95 ? v.kappa_ci95.map((x) => x.toFixed(2)).join(" – ") : ""}</td></tr>`).join("")}</table>
+    <div class="note">n=${jd.n} conversations, dimension "overall". ${esc(jd.sampling)}</div>`);
+}
+if (D.replays && D.replays.length) {
+  const opts = D.replays.map((r, i) => `<option value="${i}">${esc(r.id)} - ${r.outcome}</option>`).join("");
+  const c = card("span12", `<h2>Conversation replays</h2><select id="rsel">${opts}</select><div id="rmeta" class="note"></div><div class="replay" id="rbox"></div>`);
+  const show = (i) => { const r = D.replays[i]; const box = c.querySelector("#rbox");
+    c.querySelector("#rmeta").innerHTML = `<span class="pill ${r.outcome}">${r.outcome.toUpperCase()}</span> ` + (r.trace ? `${r.trace.llm_calls} LLM calls · ${(r.trace.llm_ms / 1000).toFixed(1)} s model time · ${r.trace.input_tokens + r.trace.output_tokens} tokens` : "");
+    box.replaceChildren(...r.msgs.map((m) => { const e = document.createElement("div"); e.className = "m " + m.r; e.textContent = (m.r === "tool" ? "→ " : m.r === "result" ? "← " : "") + m.t; return e; })); };
+  c.querySelector("#rsel").addEventListener("change", (e) => show(+e.target.value)); show(0);
+}
+if (D.ledger) {
+  const l = D.ledger;
+  card("span12 kpi", `<h2>Cost</h2><div class="note">Anthropic API (Haiku 5.5): $${l.anthropic_api.project_usd} across ${l.anthropic_api.project_calls} calls (shared cap $${l.anthropic_api.cap_usd}). Subscription CLI: ${l.claude_cli_subscription.live_calls} live calls, $${l.claude_cli_subscription.list_price_equivalent_usd} list-price equivalent (not billed).</div>`);
+}
+</script>
+</body>
+</html>
