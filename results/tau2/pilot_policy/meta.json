@@ -1,0 +1,33 @@
+{
+ "run_id": "pilot_policy",
+ "agent": "policy_agent",
+ "split": "dev",
+ "task_ids": [
+  "3",
+  "4",
+  "6",
+  "8"
+ ],
+ "trials": [
+  0
+ ],
+ "agent_model": "claude-haiku-5-5",
+ "user_model": "claude-haiku-5-5",
+ "nl_judge_model": "claude-haiku-5-5",
+ "backend": "claude_cli (claude -p --output-format json --json-schema)",
+ "cli_version": "2.1.316 (Claude Code)",
+ "tau2_commit": "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4",
+ "max_steps": 100,
+ "domain": "retail",
+ "adapter_stats": {
+  "user:calls": 31,
+  "user:live": 29,
+  "user:adapter_unwrapped": 17,
+  "agent:calls": 66,
+  "agent:live": 66,
+  "unknown:calls": 2,
+  "unknown:live": 2,
+  "user:cached": 2
+ },
+ "errors": []
+}

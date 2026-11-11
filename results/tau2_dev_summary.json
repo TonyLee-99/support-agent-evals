@@ -1,0 +1,127 @@
+{
+ "runs": {
+  "baseline": {
+   "n_tasks": 5,
+   "n_trials_min": 1,
+   "n_sims": 5,
+   "pass^1": {
+    "mean": 0.4,
+    "ci95": [
+     0.0,
+     0.8
+    ]
+   },
+   "db_only": {
+    "n_tasks": 5,
+    "n_trials_min": 1,
+    "n_sims": 5,
+    "pass^1": {
+     "mean": 0.6,
+     "ci95": [
+      0.2,
+      1.0
+     ]
+    }
+   },
+   "mean_wall_s": 125.6,
+   "termination": {
+    "user_stop": 5
+   },
+   "config": {
+    "agent": "llm_agent",
+    "agent_model": "claude-haiku-5-5",
+    "user_model": "claude-haiku-5-5",
+    "nl_judge_model": "claude-haiku-5-5",
+    "backend": "claude_cli (claude -p --output-format json --json-schema)",
+    "tau2_commit": "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4",
+    "split": "dev",
+    "task_ids": [
+     "3",
+     "19",
+     "21",
+     "23",
+     "44",
+     "50",
+     "88",
+     "91",
+     "99",
+     "103"
+    ],
+    "trials": [
+     0
+    ]
+   },
+   "adapter_stats": {},
+   "discarded_sims": 0
+  },
+  "policy_agent": {
+   "n_tasks": 6,
+   "n_trials_min": 1,
+   "n_sims": 6,
+   "pass^1": {
+    "mean": 0.8333,
+    "ci95": [
+     0.5,
+     1.0
+    ]
+   },
+   "db_only": {
+    "n_tasks": 6,
+    "n_trials_min": 1,
+    "n_sims": 6,
+    "pass^1": {
+     "mean": 0.8333,
+     "ci95": [
+      0.5,
+      1.0
+     ]
+    }
+   },
+   "mean_wall_s": 51.8,
+   "termination": {
+    "user_stop": 6
+   },
+   "config": {
+    "agent": "policy_agent",
+    "agent_model": "claude-haiku-5-5",
+    "user_model": "claude-haiku-5-5",
+    "nl_judge_model": "claude-haiku-5-5",
+    "backend": "claude_cli (claude -p --output-format json --json-schema)",
+    "tau2_commit": "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4",
+    "split": "dev",
+    "task_ids": [
+     "3",
+     "19",
+     "21",
+     "23",
+     "44",
+     "50",
+     "88",
+     "91",
+     "99",
+     "103"
+    ],
+    "trials": [
+     0
+    ]
+   },
+   "adapter_stats": {},
+   "discarded_sims": 0
+  }
+ },
+ "comparison": {
+  "pass^1": {
+   "k": 1,
+   "n_tasks": 5,
+   "diff": 0.4,
+   "ci95": [
+    -0.4,
+    1.0
+   ],
+   "tasks_better": 3,
+   "tasks_worse": 1,
+   "tasks_same": 1,
+   "p_boot_le_0": 0.193
+  }
+ }
+}

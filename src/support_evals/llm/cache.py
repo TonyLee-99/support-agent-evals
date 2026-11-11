@@ -61,6 +61,10 @@ class DiskCache:
             for d in self.read_dirs:
                 rec = self._load(d, key[:2]).get(key)
                 if rec is not None:
+                    trace = os.environ.get("SE_CACHE_TRACE")  # export helper: record which keys a run needs
+                    if trace:
+                        with open(trace, "a") as fh:
+                            fh.write(key + "\n")
                     return rec["response"]
         return None
 
