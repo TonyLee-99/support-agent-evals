@@ -16,10 +16,15 @@ class ReplayClient:
         self.cache = cache or DiskCache()
         self.misses = 0
 
-    def complete(self, system: str, prompt: str, *, schema: dict[str, Any] | None = None, sample: int = 0,
+    def complete(self, system: str, prompt: str, *, schema: dict[str, Any] | None = None, sample: Any = 0,
                  tag: str = "") -> LLMResponse:
-        key = cache_key(model=self.model, system=system, prompt=prompt, schema=schema, sample=sample)
-        hit = self.cache.get(key)
+        hit = None
+        for backend in ("claude_cli", "anthropic"):
+            key = cache_key(model=self.model, system=system, prompt=prompt, schema=schema, sample=sample,
+                            backend=backend)
+            hit = self.cache.get(key)
+            if hit is not None:
+                break
         if hit is None:
             self.misses += 1
             raise ReplayMiss(f"replay miss for {self.model} key {key[:12]} (tag={tag})")

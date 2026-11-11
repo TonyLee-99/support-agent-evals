@@ -20,10 +20,15 @@ DEFAULT_LIVE_DIR = ROOT / "data" / "cache"
 CI_DIR = ROOT / "cache" / "ci"
 
 
-def cache_key(*, model: str, system: str, prompt: str, schema: dict[str, Any] | None, sample: int) -> str:
-    # Backend is deliberately NOT part of the key: replay must serve what claude-cli recorded.
+def cache_key(*, model: str, system: str, prompt: str, schema: dict[str, Any] | None, sample: Any,
+              backend: str = "claude_cli") -> str:
+    # Backend is part of the key so an API run never silently reuses a CLI response (and vice versa); the replay
+    # backend looks up every recorded backend. claude_cli keys omit the field to stay stable with early runs.
+    d = {"model": model, "system": system, "prompt": prompt, "schema": schema, "sample": sample}
+    if backend != "claude_cli":
+        d["backend"] = backend
     payload = json.dumps(
-        {"model": model, "system": system, "prompt": prompt, "schema": schema, "sample": sample},
+        d,
         sort_keys=True,
         ensure_ascii=False,
     )

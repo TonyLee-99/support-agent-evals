@@ -87,7 +87,7 @@ class ClaudeCLIClient:
             cmd += ["--json-schema", json.dumps(schema)]
         return cmd
 
-    def complete(self, system: str, prompt: str, *, schema: dict[str, Any] | None = None, sample: int = 0,
+    def complete(self, system: str, prompt: str, *, schema: dict[str, Any] | None = None, sample: Any = 0,
                  tag: str = "") -> LLMResponse:
         # Temperature is not exposed by the CLI; the default sampling applies, so different `sample` values differ.
         key = cache_key(model=self.model, system=system, prompt=prompt, schema=schema, sample=sample)

@@ -59,19 +59,59 @@ def test_replay_serves_recorded_and_misses_loudly(tmp_path):
         rc.complete("s", "other")
 
 
-def test_anthropic_backend_shape(tmp_path, monkeypatch):
+def _api(tmp_path, handler, **kw):
+    return AnthropicClient("claude-haiku-5-5", cache=DiskCache(write_dir=tmp_path / "c", read_dirs=[]),
+                           transport=httpx.MockTransport(handler), ledger_path=tmp_path / "ledger.jsonl", **kw)
+
+
+def _ok(req: httpx.Request):
+    return httpx.Response(200, json={"content": [{"type": "tool_use", "name": "respond", "input": {"message": "hi"}}],
+                                     "usage": {"input_tokens": 1000, "output_tokens": 200,
+                                               "cache_read_input_tokens": 5000, "cache_creation_input_tokens": 0}})
+
+
+def test_anthropic_backend_shape_caching_and_ledger(tmp_path, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     seen = {}
 
-    def handler(req: httpx.Request):
+    def handler(req):
         seen["body"] = json.loads(req.content)
         seen["key"] = req.headers["x-api-key"]
-        return httpx.Response(200, json={"content": [{"type": "tool_use", "name": "respond", "input": {"message": "hi"}}],
-                                         "usage": {"input_tokens": 3, "output_tokens": 2}})
+        return _ok(req)
 
-    c = AnthropicClient("claude-haiku-5-5", cache=DiskCache(write_dir=tmp_path, read_dirs=[]),
-                        transport=httpx.MockTransport(handler))
+    c = _api(tmp_path, handler)
     r = c.complete("S", "P", schema=SCHEMA)
-    assert r.structured == {"message": "hi"}
-    assert seen["key"] == "test-key" and seen["body"]["tool_choice"] == {"type": "tool", "name": "respond"}
-    assert seen["body"]["system"] == "S"
+    assert r.structured == {"message": "hi"} and seen["key"] == "test-key"
+    assert seen["body"]["system"][0]["cache_control"] == {"type": "ephemeral"}
+    assert seen["body"]["tool_choice"] == {"type": "auto"} and seen["body"]["model"] == "claude-haiku-5-5"
+    rec = json.loads((tmp_path / "ledger.jsonl").read_text())
+    # 1000*0.10 + 200*0.50 + 5000*0.01 per million
+    assert abs(rec["usd"] - 0.00025) < 1e-9 and rec["project"] == "support-agent-evals"
+    assert "test-key" not in (tmp_path / "ledger.jsonl").read_text()
+    assert all("test-key" not in f.read_text() for f in (tmp_path / "c").glob("*.jsonl"))
+
+
+def test_anthropic_budget_cap_falls_back(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    (tmp_path / "ledger.jsonl").write_text(json.dumps({"project": "other", "usd": 3.50}) + "\n")
+
+    class Fallback:
+        backend, model = "claude_cli", "claude-haiku-5-5"
+
+        def complete(self, system, prompt, **kw):
+            from support_evals.llm.base import LLMResponse
+            return LLMResponse(text="cli", model=self.model)
+
+    def handler(req):
+        raise AssertionError("API must not be called over budget")
+
+    r = _api(tmp_path, handler, fallback=Fallback()).complete("S", "P")
+    assert r.text == "cli" and r.meta["fallback_from"] == "anthropic"
+    from support_evals.llm.budget import BudgetExceeded
+    with pytest.raises(BudgetExceeded):
+        _api(tmp_path, handler).complete("S", "P2")
+
+
+def test_api_model_restricted_to_haiku():
+    with pytest.raises(ValueError):
+        AnthropicClient("claude-sonnet-5-5")

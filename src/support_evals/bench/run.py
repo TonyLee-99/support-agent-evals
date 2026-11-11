@@ -99,7 +99,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--max-steps", type=int, default=100)
     ap.add_argument("--run-id", required=True)
+    ap.add_argument("--backend", default="claude_cli", choices=["claude_cli", "anthropic"])
     args = ap.parse_args(argv)
+    os.environ["SE_LLM_BACKEND"] = args.backend
+    if args.backend == "anthropic":
+        from support_evals.llm.budget import key_from_keychain
+
+        key = os.environ.get("ANTHROPIC_API_KEY") or key_from_keychain()
+        if not key:
+            raise SystemExit("no API key in env or keychain")
+        os.environ["ANTHROPIC_API_KEY"] = key  # process memory only; never written anywhere
 
     setup(args.judge_model)
     from tau2.runner.helpers import get_tasks
@@ -133,7 +142,9 @@ def main(argv: list[str] | None = None) -> int:
         "run_id": args.run_id, "agent": args.agent, "split": args.split, "task_ids": ids,
         "trials": sorted({*meta.get("trials", []), *range(args.trial_offset, args.trial_offset + args.trials)}),
         "agent_model": args.model, "user_model": args.user_model, "nl_judge_model": args.judge_model,
-        "backend": "claude_cli (claude -p --output-format json --json-schema)", "cli_version": cli_version(),
+        "backend": ("claude_cli (claude -p --output-format json --json-schema)" if args.backend == "claude_cli"
+                    else "anthropic Messages API (respond tool, cached system prefix; CLI fallback over budget)"),
+        "cli_version": cli_version(),
         "tau2_commit": TAU2_COMMIT, "max_steps": args.max_steps, "domain": "retail",
     })
     meta_path.write_text(json.dumps(meta, indent=1))

@@ -14,10 +14,9 @@ _clients: dict[tuple[str, str], LLMClient] = {}
 
 
 def backend_name() -> str:
+    # The API key is a small shared budget: it is only used when explicitly requested (SE_LLM_BACKEND=anthropic).
     b = os.environ.get("SE_LLM_BACKEND", "auto")
-    if b == "auto":
-        return "anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "claude_cli"
-    return b
+    return "claude_cli" if b == "auto" else b
 
 
 def get_client(model: str = HAIKU, backend: str | None = None) -> LLMClient:
@@ -30,7 +29,8 @@ def get_client(model: str = HAIKU, backend: str | None = None) -> LLMClient:
             _clients[k] = ReplayClient(model, cache)
         elif b == "anthropic":
             from support_evals.llm.anthropic_api import AnthropicClient
-            _clients[k] = AnthropicClient(model, cache)
+            from support_evals.llm.claude_cli import ClaudeCLIClient
+            _clients[k] = AnthropicClient(model, cache, fallback=ClaudeCLIClient(model, cache=cache))
         elif b == "claude_cli":
             from support_evals.llm.claude_cli import ClaudeCLIClient
             _clients[k] = ClaudeCLIClient(model, cache=cache)

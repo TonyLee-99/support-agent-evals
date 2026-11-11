@@ -49,7 +49,7 @@ class LLMClient(Protocol):
         prompt: str,
         *,
         schema: dict[str, Any] | None = None,
-        sample: int = 0,
+        sample: Any = 0,
         tag: str = "",
     ) -> LLMResponse:
         """Return one completion. `sample` distinguishes repeated draws of the same prompt (trials)."""
