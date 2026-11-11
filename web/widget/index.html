@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support widget demo</title>
+<link rel="stylesheet" href="/widget/widget.css">
+</head>
+<body class="demo">
+  <main class="demo-main">
+    <h1>Acme Home &amp; Tech</h1>
+    <p class="demo-sub">Demo storefront. Orders and customers are tau2-bench retail test data (Simulated).</p>
+    <label class="demo-login">Signed in as
+      <select id="who">
+        <option value="">guest (not signed in)</option>
+        <option value="aarav_santos_2259" selected>aarav_santos_2259</option>
+        <option value="amelia_wilson_4614">amelia_wilson_4614</option>
+        <option value="anya_patel_3710">anya_patel_3710</option>
+      </select>
+    </label>
+  </main>
+  <aside id="support"></aside>
+  <script src="/widget/widget.js"></script>
+  <script>
+    const root = document.getElementById("support");
+    const who = document.getElementById("who");
+    let w = SupportWidget.mount(root, "", who.value || null);
+    who.addEventListener("change", () => { root.replaceChildren(); w = SupportWidget.mount(root, "", who.value || null); });
+  </script>
+</body>
+</html>
