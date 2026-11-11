@@ -27,7 +27,7 @@ def test_schema_and_integrity(name, author, prefix):
         assert EXPECT <= set(s["expect"]), s["id"]
         for oid in s["expect"]["order_status"]:
             assert oid in FX["orders"], (s["id"], oid)
-        for oid, o in (s.get("overlay") or {}).get("orders", {}).items():
+        for _oid, o in (s.get("overlay") or {}).get("orders", {}).items():
             assert o["user_id"] == s["customer"], "overlays may only touch the customer's own orders"
 
 

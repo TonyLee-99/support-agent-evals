@@ -204,7 +204,7 @@ class Engine:
                 self._append(cid, msg)
                 return [*out, msg]
             if parsed.tool_call is None:
-                msg = {"role": "assistant", "content": parsed.content}
+                msg = {"role": "assistant", "content": parsed.content or ""}
                 self._append(cid, msg)
                 out.append(msg)
                 return out

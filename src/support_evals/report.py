@@ -16,7 +16,14 @@ from typing import Any
 
 import numpy as np
 
-from support_evals.bench.metrics import bootstrap_ci, db_reward, load_sims, paired, successes_by_task, summarize
+from support_evals.bench.metrics import (
+    bootstrap_ci,
+    db_reward,
+    load_sims,
+    paired,
+    successes_by_task,
+    summarize,
+)
 from support_evals.llm.cache import ROOT
 
 R = ROOT / "results"
@@ -122,7 +129,7 @@ def scenarios() -> None:
         for g, rs in groups.items():
             res[g] = {
                 "deterministic_pass": rate(rs, lambda r: r["checks"]["pass"]),
-                "judge_pass": rate(rs, lambda r: jm.get(r["scenario_id"], {}).get("overall") == "pass") if jm else None,
+                "judge_pass": rate(rs, lambda r, jm=jm: jm.get(r["scenario_id"], {}).get("overall") == "pass") if jm else None,
                 "handoff_rate": rate(rs, lambda r: r["state"] == "handed_off"),
                 "server_blocked_write_rate": rate(rs, lambda r: bool(r["checks"]["server_blocked_writes"])),
                 "leak_rate": rate(rs, lambda r: any(k.startswith("leak:") and not v["pass"]

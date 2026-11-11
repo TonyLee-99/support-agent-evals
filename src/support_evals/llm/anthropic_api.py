@@ -69,9 +69,9 @@ class AnthropicClient:
         except budget.BudgetExceeded:
             if self.fallback is None:
                 raise
-            r = self.fallback.complete(system, prompt, schema=schema, sample=sample, tag=tag)
-            r.meta = {**r.meta, "fallback_from": "anthropic"}
-            return r
+            fb = self.fallback.complete(system, prompt, schema=schema, sample=sample, tag=tag)
+            fb.meta = {**fb.meta, "fallback_from": "anthropic"}
+            return fb
         sys_text = system + (RESPOND_HINT if schema is not None else "")
         body: dict[str, Any] = {
             "model": self.model, "max_tokens": self.max_tokens,
@@ -105,7 +105,7 @@ class AnthropicClient:
             text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
             structured = next((b["input"] for b in data.get("content", [])
                                if b.get("type") == "tool_use" and b.get("name") == "respond"), None)
-            text_as_message = False
+            text_as_message: bool | None = False
             other = next((b for b in data.get("content", []) if b.get("type") == "tool_use"
                           and b.get("name") != "respond"), None)
             if schema is not None and structured is None and other is not None and "action" in schema["properties"]:
