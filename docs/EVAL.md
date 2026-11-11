@@ -30,9 +30,36 @@ comparison. No leaderboard comparability is claimed.
   server-blocked write attempts, cost/latency from traces.
 
 ## 4. Results
-(filled from results/ at the end of the build - see README and `results/*.json`)
+
+**tau2 retail test subset (10 tasks, k=2, Anthropic API, `results/tau2_test_summary.json`).**
+| agent | pass^1 [CI] | pass^2 [CI] | DB-only pass^1 | discarded sims (infra, re-run) |
+|---|---|---|---|---|
+| baseline `llm_agent` | 70% [50, 90] | 50% [20, 80] | 75% | 2 |
+| `policy_agent` | 85% [65, 100] | 80% [50, 100] | 85% | 2 |
+
+Paired pass^1 difference +15 pts, CI [0, +30]; 3 tasks better, 0 worse, 7 same. Dev (10 tasks, k=1, CLI):
+60% -> 80% (`results/tau2_dev_summary.json`). Ablations (dev, exploratory): minus checklist 60%, minus
+confirmation gate 70%, minus arg_check / identity_gate / handoff 80% (= full). Guard-only variants share every LLM
+draw with the full agent until a guard fires (identical prompts -> identical cache keys), so their differences
+isolate the guard; most guards never fired on these 10 tasks.
+
+**Own scenarios (20 = 10 self + 10 codex; 11 holdout; `results/scenarios_summary.json`).** Deterministic pass
+baseline 90%, v1 90%, v2 95%, v3 100%; judge pass 35%, 40%, 75%, 80%. Holdout (n=11): v1 100% / 45%, v3 100% / 73%.
+Leak rate 0% everywhere. Mean per conversation (v3): 7.5 LLM calls, 38 s model time, $0.0068 list price.
+
+**Error analysis (`results/flywheel/taxonomy.json`).** 22 labelled dev failures; 18 `hallucinated_fact`, mostly
+invented tool outages -> traced to the CLI adapter (INCIDENTS INC-8), fixed in v3. Remaining tau2 dev failures:
+`incomplete_action` (exchanges submitted before a return on the same order; one product id checked instead of all).
+
+**Judge calibration (`results/judge_calibration.json`).** n=10; judge vs each grader 90% agreement, kappa 0.74
+(CI 0.00-1.00); graders agree 100%. Per dimension: policy 90%, goal 90%, tone 100%. One disagreement (judge
+stricter on refusal wording), resolved for the graders. Graders are a fresh Claude grader and ChatGPT (codex);
+neither is a human support expert, and codex also wrote half the scenarios.
+
+**Regression gate (`results/regression/report_*.json`).** 17 service cases x 3 fresh draws, all must pass:
+v1 0.71, v2 0.65, v3 0.94, broken 0.53 -> gate ships v3.
 
 ## 5. Sample size, CI width, how to scale
 With 10 tasks a single task flip moves pass^1 by 5-10 points; CI half-widths are ~15-20 points. To halve the CI
 width, quadruple the tasks: `make tau2 N=40 K=4` (the full official test split; ~160 simulations per agent,
-~$0.02 each on Haiku API at measured cost). Scenarios: `make scenarios SCEN_N=50` runs all 100.
+~$0.01 each on Haiku API: $0.46 bought 40 kept + discarded simulations). Scenarios: `make scenarios SCEN_N=50` runs all 100.

@@ -27,12 +27,12 @@ def test_tau2_numbers():
 
 def test_scenario_judge_regression_numbers():
     sc = json.loads((R / "scenarios_summary.json").read_text())
-    for run in ("scen_baseline_20", "scen_v1_20", "scen_v2_20"):
+    for run in ("scen_baseline_20", "scen_v1_20", "scen_v2_20", "scen_v3_20"):
         a = sc[run]["all"]
         assert f"| {run} | {pct(a['deterministic_pass']['rate'])} | {pct(a['judge_pass']['rate'])} |" in README, run
     j = json.loads((R / "judge_calibration.json").read_text())
     k = j["pairs"]["judge_vs_grader_a"]
     assert f"kappa {k['kappa']:.2f}" in README and f"{pct(k['agreement'])} agreement" in README
-    for v in ("v1", "v2"):
+    for v in ("v1", "v2", "v3"):
         rep = json.loads((R / "regression" / f"report_{v}.json").read_text())
         assert f"{v}: {rep['service_pass_rate']:.2f}" in README, v

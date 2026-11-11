@@ -72,7 +72,7 @@ if (sc && sc.scen_v1_20) {
 
 // pass^k bar chart with CI whiskers
 function bars(rows, title, note) {
-  const W = 560, H = 210, L = 150, max = 1;
+  const W = 600, H = 210, L = 190, max = 1;
   let y = 18, g = "";
   rows.forEach((r) => {
     const w = (W - L - 40) * r.v / max, lo = L + (W - L - 40) * r.lo, hi = L + (W - L - 40) * r.hi;

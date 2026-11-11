@@ -29,5 +29,5 @@ versions are code: rolling back the image rolls back the prompt; `agent_version`
 
 ## Eval operations
 - Re-run regression gate after any prompt change: `make regress && make gate`.
-- Benchmark at a different size: `make tau2 N=40 K=4` (cost scales ~linearly; ~$0.02 per simulation on Haiku API).
+- Benchmark at a different size: `make tau2 N=40 K=4` (cost scales ~linearly; ~$0.01 per simulation on Haiku API).
 - Rate limit on the CLI: runners stop and record `discarded` sims; re-run the same command to resume.

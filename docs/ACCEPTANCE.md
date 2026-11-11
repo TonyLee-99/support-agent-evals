@@ -60,6 +60,27 @@ Fixed on 2026-11-11 before any agent code was written. At the end each line gets
 - Policy-violation rate on own holdout scenarios (deterministic checks): final < baseline.
 - Judge vs grader agreement: kappa >= 0.6 (report the real value regardless).
 
-## Results
+## Results (2026-11-11; sizes rescoped by the owner: 10 test tasks x k=2, 20 scenarios, 10 calibration items)
 
-(filled in at the end)
+| # | result | evidence |
+|---|---|---|
+| A1 | PASS | `scripts/check_tau2_pristine.py` (commit pinned, MIT, 10 files byte-identical) |
+| A2 | PASS | splits committed in 3c34d37 before any tuning; `tests/test_splits.py` |
+| A3 | PASS | `differences_from_leaderboard` in `results/tau2_test_summary.json`; README |
+| A4 | PASS | pass^1/pass^2 + CIs + paired difference in `results/tau2_test_summary.json` |
+| A5 | PASS | baseline = unmodified `llm_agent`, same model/backend (config block) |
+| A6 | PASS | `results/ablations.json` (exploratory, k=1) |
+| A7 | PASS | `tests/test_replay_tau2.py` replays a recorded simulation offline; `results/ledger_summary.json` |
+| B1-B8 | PASS | `tests/service/` (32 tests: ownership, idempotency, 32-thread race, confirmation, injection, handoff, tracing, kill switch) |
+| B9 | PASS | `cd web/widget && npm run check` (strict tsc, build, 3 node tests); served at `/widget` |
+| C1 | PASS | `scenarios/PROVENANCE.md`, `holdout.json` (hashes), `tests/test_scenarios.py` |
+| C2 | PASS (subset) | 20 of 100 scenarios run for 4 versions; dev/holdout split reported |
+| C3 | PASS | `results/flywheel/labels.jsonl`, `taxonomy.json` |
+| C4 | PASS | `tests/test_regression_gate.py`: gate passes v3, fails v1/v2/broken, replays offline |
+| C5 | PASS (n=10) | `results/judge_calibration.json` |
+| C6 | PASS | taxonomy by version on the dashboard |
+| D1-D4 | PASS | `make check`; `scripts/check_dashboard.py`; `tests/test_readme_numbers.py`; `scripts/check_docs.py` |
+
+Targets: pass^1 +5 pts -> **met** (+15, paired CI lower bound 0). Service B1-B9 all pass -> **met**. Policy-violation
+rate on holdout scenarios (deterministic) final < baseline -> **met** (0% vs 18% failing checks, n=11). Judge
+kappa >= 0.6 -> **met on the point estimate** (0.74) but the CI (0-1) is too wide to rely on.

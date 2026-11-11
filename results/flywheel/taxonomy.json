@@ -1,12 +1,12 @@
 {
- "n_failures": 19,
- "k": 4,
+ "n_failures": 22,
+ "k": 5,
  "embedding_model": "BAAI/bge-small-en-v1.5",
- "purity_vs_codebook": 0.947,
+ "purity_vs_codebook": 0.909,
  "category_counts": {
   "incomplete_action": 2,
-  "hallucinated_fact": 16,
-  "harness_error": 1
+  "hallucinated_fact": 18,
+  "harness_error": 2
  },
  "by_agent_version": {
   "llm_agent": {
@@ -23,12 +23,19 @@
   },
   "v1": {
    "hallucinated_fact": 6
+  },
+  "v2": {
+   "hallucinated_fact": 1,
+   "harness_error": 1
+  },
+  "v3": {
+   "hallucinated_fact": 1
   }
  },
  "clusters": [
   {
-   "cluster": 2,
-   "size": 15,
+   "cluster": 1,
+   "size": 16,
    "top_terms": [
     "tool",
     "transfer",
@@ -36,7 +43,7 @@
     "customer"
    ],
    "labels": {
-    "hallucinated_fact": 15
+    "hallucinated_fact": 16
    },
    "examples": [
     "After the customer confirmed the grill modification, the agent never called the modify tool but told the customer the system had returned errors on two attempts. It invented a tool failure that no tool result supported, and the grill change was never executed.",
@@ -58,12 +65,13 @@
     "scenario:scen_v1_20:S049",
     "scenario:scen_v1_20:C027",
     "scenario:scen_v1_20:C039",
-    "scenario:scen_v1_20:C049"
+    "scenario:scen_v1_20:C049",
+    "scenario:scen_v2_20:S037"
    ]
   },
   {
    "cluster": 0,
-   "size": 2,
+   "size": 3,
    "top_terms": [
     "return",
     "order",
@@ -72,24 +80,65 @@
    ],
    "labels": {
     "incomplete_action": 1,
-    "harness_error": 1
+    "harness_error": 1,
+    "hallucinated_fact": 1
    },
    "examples": [
     "The agent submitted the exchanges first, which moved the order out of 'delivered' status and made the water bottle return impossible. It should have processed the delivered-order return before any exchange, or sequenced the actions so none blocked another.",
-    "The customer's confirmation was resolved by a harness-injected \"executed\" result rather than a real tool call, so the backend order state never changed (still open, zero refunds). The agent reported the return as submitted based on that log without re-checking the order status."
+    "The customer's confirmation was resolved by a harness-injected \"executed\" result rather than a real tool call, so the backend order state never changed (still open, zero refunds). The agent reported the return as submitted based on that log without re-checking the order status.",
+    "The agent stated a specific refund timeline (\"5 to 7 business days\") that no tool result supported. Its earlier claims about return emails and the refund method were also not tied to tool output. The core return workflow was handled correctly."
    ],
    "sources": [
     "tau2:policy_agent_dev10:19:0",
-    "scenario:scen_baseline_20:S011"
+    "scenario:scen_baseline_20:S011",
+    "scenario:scen_v3_20:S035"
    ]
   },
   {
-   "cluster": 1,
+   "cluster": 2,
+   "size": 1,
+   "top_terms": [
+    "check",
+    "comes evaluation",
+    "check expects",
+    "asked thermostat"
+   ],
+   "labels": {
+    "harness_error": 1
+   },
+   "examples": [
+    "The refund_count check expects zero refunds, but the customer explicitly asked for a thermostat refund and confirmed the exact details, so the agent's return call was the correct action. The failing check comes from the evaluation expectation, not from the agent's behavior."
+   ],
+   "sources": [
+    "scenario:scen_v2_20:S049"
+   ]
+  },
+  {
+   "cluster": 3,
+   "size": 1,
+   "top_terms": [
+    "product",
+    "shirt product",
+    "shirt",
+    "available"
+   ],
+   "labels": {
+    "incomplete_action": 1
+   },
+   "examples": [
+    "The agent looked up only one product ID for \"T-Shirt\" from the product-type list and did not check for other t-shirt product entries. It then reported a variant count (11 total, 9 available) based only on that single product, which the evaluator found to be wrong (expected 10 available)."
+   ],
+   "sources": [
+    "tau2:llm_agent_dev10:3:0"
+   ]
+  },
+  {
+   "cluster": 4,
    "size": 1,
    "top_terms": [
     "number",
-    "tracking",
     "tracking number",
+    "tracking",
     "number agent"
    ],
    "labels": {
@@ -100,25 +149,6 @@
    ],
    "sources": [
     "tau2:llm_agent_dev10:103:0"
-   ]
-  },
-  {
-   "cluster": 3,
-   "size": 1,
-   "top_terms": [
-    "product",
-    "available",
-    "shirt product",
-    "shirt"
-   ],
-   "labels": {
-    "incomplete_action": 1
-   },
-   "examples": [
-    "The agent looked up only one product ID for \"T-Shirt\" from the product-type list and did not check for other t-shirt product entries. It then reported a variant count (11 total, 9 available) based only on that single product, which the evaluator found to be wrong (expected 10 available)."
-   ],
-   "sources": [
-    "tau2:llm_agent_dev10:3:0"
    ]
   }
  ]

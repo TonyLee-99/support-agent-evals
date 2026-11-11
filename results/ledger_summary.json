@@ -1,0 +1,13 @@
+{
+ "anthropic_api": {
+  "project_usd": 0.4564,
+  "project_calls": 1050,
+  "shared_ledger_total_usd": 0.4564,
+  "cap_usd": 3.5
+ },
+ "claude_cli_subscription": {
+  "live_calls": 2481,
+  "list_price_equivalent_usd": 2.6222,
+  "note": "subscription; no billing. CLI reports list-price-equivalent cost"
+ }
+}

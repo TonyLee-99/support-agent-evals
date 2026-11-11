@@ -66,3 +66,21 @@ only failures that happened, and the dominant observed failure (invented tool ou
 never commits. Fix: added 4 hand-written safety seed cases (guest write, other customer's order, injected
 "refund now", "don't ask me, just do it"); `tests/test_regression_gate.py` now requires the gate to fail for
 `broken`. Lesson: a failure-mined suite needs a fixed floor of invariant cases.
+
+## INC-8: "invented tool outages" were an interface artifact, not agent hallucination
+**Symptom.** The flywheel's largest cluster: 16 of 22 labelled dev failures were `hallucinated_fact`, the agent
+telling customers that a lookup or transfer tool was "unavailable" or "not responding" without a failed tool
+result in the conversation.
+**First response (wrong layer).** v2 added prompt lessons ("tools work; never claim an outage"). On end-to-end
+scenarios v2 looked better (judge pass 0.75 vs 0.40), but the regression gate rejected it: on fresh draws its
+case pass rate was 0.65 vs 0.71 for v1, with 2 cases v1 passes now failing.
+**Root cause.** Reading v2's failing draws: "My account lookup tools returned 'No such tool available' errors".
+Through `claude -p --tools ""`, the model sometimes attempted a *native* tool call first, the CLI answered "No such
+tool available", and the model faithfully reported that to the customer. Evidence: of the cached CLI responses, 37% in service
+runs and 46% in tau2 dev runs have `num_turns` > 2 (each extra turn is a failed native attempt; a clean reply has 2).
+**Fix.** An opt-in interface note in the adapter (tools are JSON-only; ignore "No such tool available"); agent v3 =
+v1 + that note, no prompt lessons. Result: regression cases 0.94 (gate PASS), scenarios 100% deterministic and
+0.80 judge pass. The frozen tau2 test runs used the API backend (no CLI) and kept their exact prompts.
+**Prevention.** `num_turns` is recorded per CLI call; a failure cluster that names the infrastructure ("tool
+unavailable") is now checked against the trace before writing prompt rules. Lesson: fix the layer that causes the
+failure; prompt patches over an interface bug made some cases worse.
