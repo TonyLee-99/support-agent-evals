@@ -1,0 +1,9 @@
+{
+ "note": "tau2 policy_agent frozen before its test-split run. Dev evidence before freeze: 4 pilot sims + 9 dev sims; no prompt change was made from dev results (the checklist and guards were designed up front).",
+ "sha256": {
+  "src/support_evals/bench/agents.py": "135fb62804bfd3c72c4744d5ca3092ed34ca48daad810ff8ca8870ab7e21ffe0",
+  "src/support_evals/prompts.py": "25e6eff3b25378e0c30de95ee7e8e2c1ecdb77443d08af8bac6beeaaad92ef42",
+  "src/support_evals/bench/emulation.py": "b96cfb84f4d81335bf33cec3a7e6e2bc575290522bcd9ddd199b93d7633982b3",
+  "src/support_evals/bench/provider.py": "d3c1beba128edd2ebb08a029b0a413d330da7eeffbb22cf4f608332058848144"
+ }
+}

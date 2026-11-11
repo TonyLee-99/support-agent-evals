@@ -52,7 +52,8 @@ def process_slot():
 
 def is_usage_limit(text: str) -> bool:
     t = text.lower()
-    return any(s in t for s in ("usage limit", "rate limit", "limit reached", "resets at", "out of extra usage"))
+    return any(s in t for s in ("usage limit", "rate limit", "limit reached", "resets at", "out of extra usage", "hit your",
+                                "-hour limit", "weekly limit"))
 
 
 class UsageLimitError(LLMError):
