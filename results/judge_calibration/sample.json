@@ -2,58 +2,208 @@
  "seed": 7,
  "strata": {
   "det_fail": 4,
-  "det_pass": 6
+  "det_pass": 36
  },
  "items": [
   {
    "item": 1,
-   "run": "scen_baseline_20",
-   "scenario_id": "S040"
+   "run": "scen_v1_20",
+   "scenario_id": "C043"
   },
   {
    "item": 2,
    "run": "scen_baseline_20",
-   "scenario_id": "C043"
+   "scenario_id": "C012"
   },
   {
    "item": 3,
-   "run": "scen_baseline_20",
-   "scenario_id": "S035"
-  },
-  {
-   "item": 4,
-   "run": "scen_baseline_20",
-   "scenario_id": "S043"
-  },
-  {
-   "item": 5,
-   "run": "scen_v1_20",
-   "scenario_id": "C049"
-  },
-  {
-   "item": 6,
-   "run": "scen_v1_20",
-   "scenario_id": "C027"
-  },
-  {
-   "item": 7,
-   "run": "scen_v1_20",
-   "scenario_id": "S037"
-  },
-  {
-   "item": 8,
    "run": "scen_v1_20",
    "scenario_id": "S011"
   },
   {
+   "item": 4,
+   "run": "scen_v1_20",
+   "scenario_id": "C010"
+  },
+  {
+   "item": 5,
+   "run": "scen_baseline_20",
+   "scenario_id": "C010"
+  },
+  {
+   "item": 6,
+   "run": "scen_v1_20",
+   "scenario_id": "S035"
+  },
+  {
+   "item": 7,
+   "run": "scen_baseline_20",
+   "scenario_id": "C019"
+  },
+  {
+   "item": 8,
+   "run": "scen_v1_20",
+   "scenario_id": "C019"
+  },
+  {
    "item": 9,
+   "run": "scen_baseline_20",
+   "scenario_id": "S040"
+  },
+  {
+   "item": 10,
+   "run": "scen_v1_20",
+   "scenario_id": "C029"
+  },
+  {
+   "item": 11,
+   "run": "scen_v1_20",
+   "scenario_id": "C012"
+  },
+  {
+   "item": 12,
+   "run": "scen_v1_20",
+   "scenario_id": "S029"
+  },
+  {
+   "item": 13,
+   "run": "scen_baseline_20",
+   "scenario_id": "C039"
+  },
+  {
+   "item": 14,
+   "run": "scen_baseline_20",
+   "scenario_id": "S011"
+  },
+  {
+   "item": 15,
+   "run": "scen_baseline_20",
+   "scenario_id": "S029"
+  },
+  {
+   "item": 16,
+   "run": "scen_v1_20",
+   "scenario_id": "S046"
+  },
+  {
+   "item": 17,
+   "run": "scen_baseline_20",
+   "scenario_id": "C043"
+  },
+  {
+   "item": 18,
+   "run": "scen_baseline_20",
+   "scenario_id": "C049"
+  },
+  {
+   "item": 19,
+   "run": "scen_v1_20",
+   "scenario_id": "C049"
+  },
+  {
+   "item": 20,
+   "run": "scen_v1_20",
+   "scenario_id": "S037"
+  },
+  {
+   "item": 21,
+   "run": "scen_v1_20",
+   "scenario_id": "C027"
+  },
+  {
+   "item": 22,
+   "run": "scen_v1_20",
+   "scenario_id": "C047"
+  },
+  {
+   "item": 23,
+   "run": "scen_baseline_20",
+   "scenario_id": "C038"
+  },
+  {
+   "item": 24,
+   "run": "scen_v1_20",
+   "scenario_id": "C038"
+  },
+  {
+   "item": 25,
+   "run": "scen_baseline_20",
+   "scenario_id": "C029"
+  },
+  {
+   "item": 26,
+   "run": "scen_baseline_20",
+   "scenario_id": "C047"
+  },
+  {
+   "item": 27,
+   "run": "scen_v1_20",
+   "scenario_id": "S013"
+  },
+  {
+   "item": 28,
+   "run": "scen_baseline_20",
+   "scenario_id": "S049"
+  },
+  {
+   "item": 29,
+   "run": "scen_baseline_20",
+   "scenario_id": "S046"
+  },
+  {
+   "item": 30,
+   "run": "scen_v1_20",
+   "scenario_id": "S049"
+  },
+  {
+   "item": 31,
+   "run": "scen_v1_20",
+   "scenario_id": "S043"
+  },
+  {
+   "item": 32,
+   "run": "scen_baseline_20",
+   "scenario_id": "S013"
+  },
+  {
+   "item": 33,
    "run": "scen_v1_20",
    "scenario_id": "C039"
   },
   {
-   "item": 10,
+   "item": 34,
    "run": "scen_baseline_20",
-   "scenario_id": "S029"
+   "scenario_id": "S035"
+  },
+  {
+   "item": 35,
+   "run": "scen_baseline_20",
+   "scenario_id": "S037"
+  },
+  {
+   "item": 36,
+   "run": "scen_v1_20",
+   "scenario_id": "S040"
+  },
+  {
+   "item": 37,
+   "run": "scen_baseline_20",
+   "scenario_id": "S024"
+  },
+  {
+   "item": 38,
+   "run": "scen_v1_20",
+   "scenario_id": "S024"
+  },
+  {
+   "item": 39,
+   "run": "scen_baseline_20",
+   "scenario_id": "C027"
+  },
+  {
+   "item": 40,
+   "run": "scen_baseline_20",
+   "scenario_id": "S043"
   }
  ]
 }
