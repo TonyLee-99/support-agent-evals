@@ -156,6 +156,11 @@ def parse(obj: dict[str, Any] | None, tool_names: list[str] | None, salt: str) -
     action = obj.get("action")
     if action == "tool_call":
         tc = obj.get("tool_call")
+        if isinstance(tc, str):  # double-encoded tool call (seen on the API, INC-9): decode once
+            try:
+                tc = json.loads(tc)
+            except json.JSONDecodeError:
+                pass
         if not isinstance(tc, dict) or tc.get("name") not in tool_names:
             raise AdapterError(f"invalid tool_call: {str(tc)[:200]}")
         args = tc.get("arguments")

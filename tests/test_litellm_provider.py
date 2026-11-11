@@ -87,3 +87,9 @@ def test_user_simulator_path_has_no_tools(fake):
                            metadata={"trial": 0, "role": "user"})
     assert r.choices[0].message.content == "I want to return my order"
     assert "action" not in f.calls[0]["schema"]["properties"]
+
+
+def test_parse_decodes_string_tool_call_once():
+    t = parse({"action": "tool_call", "tool_call": '{"name": "get_order_details", "arguments": {"order_id": "#W1"}}'},
+              ["get_order_details"], "s")
+    assert t.tool_call["name"] == "get_order_details"
