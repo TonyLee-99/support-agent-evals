@@ -3,10 +3,10 @@
 [![ci](https://github.com/TonyLee-99/support-agent-evals/actions/workflows/ci.yml/badge.svg)](https://github.com/TonyLee-99/support-agent-evals/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**A customer-support agent measured honestly: on all 40 official tau2-bench retail test tasks x 3 trials, the
-policy agent does not beat tau2's default agent (pass^1 80% vs 83%, paired -2 pts, CI [-8, +4]) - the +15-pt lift
-seen earlier on a 10-task subset did not hold up - while the production-shaped service around it cannot
-double-refund or act on another customer's order by construction.**
+**An eval pipeline for a customer-support agent that caught its own false win: a +15-pt lift on a 10-task
+tau2-bench subset disappeared on all 40 official retail test tasks x 3 trials (pass^1 80% vs 83% for tau2's default
+agent, paired -2 pts, CI [-8, +4]), so the claim was retracted instead of shipped - while the production-shaped
+service around the agent cannot double-refund or act on another customer's order by construction.**
 
 ![dashboard](docs/img/dashboard.png)
 
