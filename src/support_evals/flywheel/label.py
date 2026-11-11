@@ -98,11 +98,11 @@ def scenario_transcript(run: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def collect(tau2_runs: list[str], scenario_runs: list[str]) -> list[dict[str, Any]]:
+def collect(tau2_runs: list[str], scenario_runs: list[str], allow_test: bool = False) -> list[dict[str, Any]]:
     items = []
     for run in tau2_runs:
         meta = json.loads((ROOT / "results/tau2" / run / "meta.json").read_text())
-        if meta["split"] != "dev":
+        if meta["split"] != "dev" and not allow_test:
             raise SystemExit(f"{run} is not a dev run; the flywheel only consumes dev")
         for s in load_sims(ROOT / "results/tau2" / run):
             if reward(s) < 1:
@@ -139,8 +139,11 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tau2-runs", default="")
     ap.add_argument("--scenario-runs", default="")
+    ap.add_argument("--describe-test", action="store_true",
+                    help="label TEST failures into a separate, descriptive-only file (never feeds cases or prompts)")
     a = ap.parse_args(argv)
-    items = collect([x for x in a.tau2_runs.split(",") if x], [x for x in a.scenario_runs.split(",") if x])
+    items = collect([x for x in a.tau2_runs.split(",") if x], [x for x in a.scenario_runs.split(",") if x],
+                    allow_test=a.describe_test)
     OUT.mkdir(parents=True, exist_ok=True)
     from concurrent.futures import ThreadPoolExecutor
 
@@ -148,10 +151,10 @@ def main(argv: list[str] | None = None) -> int:
         labels = list(ex.map(label, items))
     for it, lab in zip(items, labels, strict=True):
         lab["messages"] = it["messages"]  # kept for regression-case generation
-    with open(OUT / "labels.jsonl", "w") as fh:
+    with open(OUT / ("test_labels_descriptive.jsonl" if a.describe_test else "labels.jsonl"), "w") as fh:
         for lab in labels:
             fh.write(json.dumps(lab) + "\n")
-    print(f"labelled {len(labels)} failures -> {OUT / 'labels.jsonl'}")
+    print(f"labelled {len(labels)} failures")
     return 0
 
 

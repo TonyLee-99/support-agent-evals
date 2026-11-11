@@ -96,7 +96,12 @@ def score() -> None:
     for x, y in (("judge", "grader_a"), ("judge", "grader_b"), ("grader_a", "grader_b")):
         a, b = labels[x], labels[y]
         k = kappa(a, b)
-        pairs[f"{x}_vs_{y}"] = {"agreement": round(sum(p == q for p, q in zip(a, b, strict=True)) / len(a), 3),
+        agree = np.array([1.0 if p == q else 0.0 for p, q in zip(a, b, strict=True)])
+        rng = np.random.default_rng(0)
+        boots = agree[rng.integers(0, len(agree), (2000, len(agree)))].mean(axis=1)
+        pairs[f"{x}_vs_{y}"] = {"agreement": round(float(agree.mean()), 3),
+                                "agreement_ci95": [round(float(np.percentile(boots, 2.5)), 3),
+                                                   round(float(np.percentile(boots, 97.5)), 3)],
                                 "kappa": None if k is None else round(k, 3), "kappa_ci95": boot_kappa(a, b)}
     per_dim = {}
     for d in DIMS:

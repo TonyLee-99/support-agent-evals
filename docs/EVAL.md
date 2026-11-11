@@ -51,7 +51,12 @@ Leak rate 0% everywhere. Mean per conversation (v3): 7.5 LLM calls, 38 s model t
 invented tool outages -> traced to the CLI adapter (INCIDENTS INC-8), fixed in v3. Remaining tau2 dev failures:
 `incomplete_action` (exchanges submitted before a return on the same order; one product id checked instead of all).
 
-**Judge calibration (`results/judge_calibration.json`).** n=10; judge vs each grader 90% agreement, kappa 0.74
+**Test-split failures (descriptive only, after freeze; `results/flywheel/test_labels_descriptive.jsonl`).**
+9 failed test simulations: baseline 6 (incomplete_action, hallucinated_fact, false_refusal, wrong_args, wrong_info,
+user_sim_error - one each), policy agent 3 (incomplete_action, user_sim_error, harness_error). These are reported,
+not used: they would feed the next version only.
+
+**Judge calibration (`results/judge_calibration.json`).** n=10; judge vs each grader 90% agreement (CI 70-100%), kappa 0.74
 (CI 0.00-1.00); graders agree 100%. Per dimension: policy 90%, goal 90%, tone 100%. One disagreement (judge
 stricter on refusal wording), resolved for the graders. Graders are a fresh Claude grader and ChatGPT (codex);
 neither is a human support expert, and codex also wrote half the scenarios.

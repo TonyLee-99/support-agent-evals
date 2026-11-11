@@ -74,3 +74,41 @@ def test_return_is_pending_receipt_not_money_sent(tools, store):
     tools.confirm(A, propose_return(tools)["action_id"], "k1")
     assert store.refunds()[0]["status"] == "pending_receipt"
     assert store.order(A_DELIVERED)["status"] == "return requested"
+
+
+def test_exchange_refund_difference_respects_limits(tools, store, monkeypatch):
+    monkeypatch.setattr(tools_mod, "AUTO_REFUND_LIMIT", 1.0)
+    act = tools.propose(session(C), "exchange_delivered_order_items",
+                        {"order_id": C_O1, "item_ids": [C_I1], "new_item_ids": ["5992316252"], "payment_method_id": C_PM1})
+    assert act["refund_amount"] > 1.0  # $157.61 jacket -> $141.29 variant: $16.32 owed to the customer
+    r = tools.confirm(C, act["action_id"], "k")
+    assert r["status"] == "escalated" and store.order(C_O1)["status"] == "delivered"
+
+
+def test_exchange_difference_recorded_in_refund_ledger(tools, store):
+    act = tools.propose(session(C), "exchange_delivered_order_items",
+                        {"order_id": C_O1, "item_ids": [C_I1], "new_item_ids": ["5992316252"], "payment_method_id": C_PM1})
+    tools.confirm(C, act["action_id"], "k")
+    rows = store.refunds(C_O1)
+    assert len(rows) == 1 and rows[0]["kind"] == "exchange_difference" and rows[0]["amount"] == pytest.approx(16.32)
+
+
+def test_price_change_after_card_is_rejected(tools, store):
+    act = tools.propose(session(C), "exchange_delivered_order_items",
+                        {"order_id": C_O1, "item_ids": [C_I1], "new_item_ids": ["5992316252"], "payment_method_id": C_PM1})
+    import json as _j
+    pid = store.order(C_O1)["items"][1]["product_id"]
+    doc = store.product(pid)
+    doc["variants"]["5992316252"]["price"] = 10.0
+    store.conn().execute("UPDATE products SET doc=? WHERE product_id=?", (_j.dumps(doc), pid))
+    with pytest.raises(Conflict):
+        tools.confirm(C, act["action_id"], "k")
+    assert store.refunds() == []
+
+
+def test_kill_switch_blocks_confirmation_of_existing_card(tools, store, monkeypatch):
+    act = propose_return(tools)
+    monkeypatch.setenv("SE_WRITES_ENABLED", "0")
+    with pytest.raises(Conflict):
+        tools.confirm(A, act["action_id"], "k")
+    assert store.refunds() == []

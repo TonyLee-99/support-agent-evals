@@ -30,3 +30,18 @@ def test_unstructured_summary_kept_as_reason(client, hdr, llm):
     client.post(f"/v1/conversations/{cid}/messages", json={"text": "where is my stuff"}, headers=hdr())
     t = client.get("/v1/handoffs", headers=OPS).json()[0]
     assert t["reason"] == "customer is upset about a late delivery" and t["customer"] == A
+
+
+def test_handoff_cancels_pending_cards(client, hdr, llm, store):
+    from .conftest import A_DELIVERED, A_ITEM, A_PM, say
+    llm.push(tool("return_delivered_order_items", order_id=A_DELIVERED, item_ids=[A_ITEM], payment_method_id=A_PM),
+             say("Please confirm."))
+    cid = client.post("/v1/conversations", json={}, headers=hdr()).json()["conversation_id"]
+    card = [x for x in client.post(f"/v1/conversations/{cid}/messages", json={"text": "return"}, headers=hdr()).json()["replies"]
+            if x["role"] == "confirmation"][0]
+    llm.push(tool("transfer_to_human_agents", summary=""))
+    client.post(f"/v1/conversations/{cid}/messages", json={"text": "actually get me a human"}, headers=hdr())
+    r = client.post(f"/v1/conversations/{cid}/actions/{card['action_id']}/confirm", headers={**hdr(), "Idempotency-Key": "k"})
+    assert r.status_code == 409 and store.refunds() == []
+    t = client.get("/v1/handoffs", headers=OPS).json()[0]
+    assert t["intent"] and t["actions_taken"] and t["reason"]

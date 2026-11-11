@@ -13,10 +13,11 @@ object`. tau2 turned each into an agent error, so simulations ended early and we
 agents. Spend: about $0.20 of the $3.50 budget on runs that were thrown away.
 
 **Root cause.** Two mismatches between the API backend and the strict-JSON contract the CLI backend follows:
-1. Haiku often answered with plain text instead of calling the `respond` tool (50 cached replies).
+1. Haiku often answered with plain text instead of calling the `respond` tool (50 cached replies; counted by the
+   purge script at the time, output not saved).
 2. With tool schemas described in the system prompt, it sometimes emitted a `tool_use` block named after a
    retail tool (e.g. `get_order_details`) instead of `respond` (80 cached replies, `stop_reason=tool_use`,
-   `structured=null`).
+   `structured=null`; same provenance).
 A third, latent bug made it worse: the provider's adapter failure raised `AdapterError`, which our runner did not
 classify as an infrastructure error, so the broken simulations were *scored* rather than discarded.
 
@@ -28,13 +29,16 @@ both are exactly what the native API means; count them in response meta. (b) Ada
 simulation as an infra error: it is discarded and re-run, and the count is reported (`discarded_sims`).
 (c) Purged the bad cache entries and re-ran both agents from scratch.
 
+**What the fix does and does not do.** v3 still shows extra CLI turns at the same rate (37%,
+`results/cli_num_turns.json` by version), so the note did not stop the native attempts; it stopped the model from
+treating them as real tool failures and telling the customer. A cleaner fix is a backend with native tool calling.
 **Prevention.** `adapter_stats` and `discarded_sims` are part of every summary and shown on the dashboard; a run
 with discarded simulations is visible, never silent. Lesson: when the measurement pipeline can fail, its failures
 must be a separate outcome from the system-under-test's failures.
 
 ## INC-2: simulated customer double-encoded its messages
 Pilot runs showed user-simulator turns like `{"message": "Okay, so ..."}` inside the message text (27 of 54 user
-turns in the first pilots). Cause: the model put the JSON envelope into the `message` field. Fix: one-level unwrap
+turns in the first pilots: `adapter_unwrapped` in `results/tau2/pilot_*/meta.json`). Cause: the model put the JSON envelope into the `message` field. Fix: one-level unwrap
 in the adapter, counted as `adapter_unwrapped`, plus a protocol line "the value of message is plain text". Applies
 equally to both agents.
 
@@ -76,11 +80,15 @@ scenarios v2 looked better (judge pass 0.75 vs 0.40), but the regression gate re
 case pass rate was 0.65 vs 0.71 for v1, with 2 cases v1 passes now failing.
 **Root cause.** Reading v2's failing draws: "My account lookup tools returned 'No such tool available' errors".
 Through `claude -p --tools ""`, the model sometimes attempted a *native* tool call first, the CLI answered "No such
-tool available", and the model faithfully reported that to the customer. Evidence: of the cached CLI responses, 37% in service
-runs and 46% in tau2 dev runs have `num_turns` > 2 (each extra turn is a failed native attempt; a clean reply has 2).
+tool available", and the model faithfully reported that to the customer. Direct evidence: failing draws quote "No such tool available".
+Supporting (not proof): 37% of service and 46% of tau2-dev CLI responses ran more than the 2 internal turns of a
+clean structured reply, versus 0% for the judge, which has no tools (`results/cli_num_turns.json`).
 **Fix.** An opt-in interface note in the adapter (tools are JSON-only; ignore "No such tool available"); agent v3 =
 v1 + that note, no prompt lessons. Result: regression cases 0.94 (gate PASS), scenarios 100% deterministic and
 0.80 judge pass. The frozen tau2 test runs used the API backend (no CLI) and kept their exact prompts.
+**What the fix does and does not do.** v3 still shows extra CLI turns at the same rate (37%,
+`results/cli_num_turns.json` by version), so the note did not stop the native attempts; it stopped the model from
+treating them as real tool failures and telling the customer. A cleaner fix is a backend with native tool calling.
 **Prevention.** `num_turns` is recorded per CLI call; a failure cluster that names the infrastructure ("tool
 unavailable") is now checked against the trace before writing prompt rules. Lesson: fix the layer that causes the
 failure; prompt patches over an interface bug made some cases worse.

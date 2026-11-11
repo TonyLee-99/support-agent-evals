@@ -94,7 +94,7 @@ class Engine:
         self.model = model
 
     # --- persistence helpers ------------------------------------------------------------------------------
-    def create_conversation(self, principal: str | None, version: str = "v1", sample: Any = 0) -> str:
+    def create_conversation(self, principal: str | None, version: str = "v3", sample: Any = 0) -> str:
         cid = self.new_id("conv")
         self.store.conn().execute("INSERT INTO conversations (conversation_id, principal, identified_user, state,"
                                   " agent_version) VALUES (?,?,?,?,?)",
@@ -161,14 +161,20 @@ class Engine:
         s = self._session(cid)
         turn = self._turn_no(cid)
         t0 = time.perf_counter()
+        outcome: dict[str, Any] = {"ok": False}
         try:
             if confirmed:
                 res = self.tools.confirm(s.principal or "", action_id, idem_key)
             else:
                 res = self.tools.cancel_action(s.principal or "", action_id)
+            outcome = {"ok": True, "status": res.get("status"), "refund_amount": res.get("refund_amount"),
+                       "ticket_id": res.get("ticket_id"), "replayed": bool(res.get("replayed"))}
+        except Exception as e:
+            outcome = {"ok": False, "error": type(e).__name__, "detail": str(e)[:200]}
+            raise
         finally:
             self._span(cid, turn, "tool", "confirm" if confirmed else "decline", (time.perf_counter() - t0) * 1000,
-                       action_id=action_id)
+                       action_id=action_id, **outcome)
         if res.get("replayed"):
             return []  # idempotent replay: no new turn
         if res.get("status") == "escalated":
@@ -266,7 +272,11 @@ class Engine:
             "INSERT INTO handoff_tickets (ticket_id, conversation_id, customer, intent, actions_taken, reason, priority,"
             " status) VALUES (?,?,?,?,?,?,?,?)",
             (tid, cid, fields.get("customer") or conv["principal"] or conv["identified_user"] or "unknown",
-             fields.get("intent", ""), fields.get("done", ""), reason, priority, "open"))
+             fields.get("intent") or "unspecified (see transcript)", fields.get("done") or "none recorded", reason,
+             priority, "open"))
+        # a human owns the conversation now: outstanding cards must not be confirmable behind their back
+        self.store.conn().execute("UPDATE pending_actions SET status='cancelled_by_handoff' WHERE conversation_id=? "
+                                  "AND status='pending'", (cid,))
         self._set_state(cid, "handed_off")
         return tid
 

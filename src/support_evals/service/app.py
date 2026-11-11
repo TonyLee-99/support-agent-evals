@@ -48,7 +48,7 @@ def verify(token: str | None) -> str | None:
 
 
 class NewConversation(BaseModel):
-    agent_version: str = "v1"
+    agent_version: str = "v3"  # the version the regression gate passed
 
 
 class UserText(BaseModel):

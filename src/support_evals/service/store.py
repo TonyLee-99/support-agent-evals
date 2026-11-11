@@ -105,6 +105,10 @@ class Store:
         d["status"] = r["status"]
         return d
 
+    def order_version(self, order_id: str) -> int:
+        r = self.conn().execute("SELECT version FROM orders WHERE order_id=?", (order_id,)).fetchone()
+        return int(r["version"]) if r else -1
+
     def product(self, product_id: str) -> dict[str, Any] | None:
         r = self.conn().execute("SELECT doc FROM products WHERE product_id=?", (product_id,)).fetchone()
         return json.loads(r["doc"]) if r else None

@@ -70,17 +70,19 @@ Fixed on 2026-11-11 before any agent code was written. At the end each line gets
 | A4 | PASS | pass^1/pass^2 + CIs + paired difference in `results/tau2_test_summary.json` |
 | A5 | PASS | baseline = unmodified `llm_agent`, same model/backend (config block) |
 | A6 | PASS | `results/ablations.json` (exploratory, k=1) |
-| A7 | PASS | `tests/test_replay_tau2.py` replays a recorded simulation offline; `results/ledger_summary.json` |
-| B1-B8 | PASS | `tests/service/` (32 tests: ownership, idempotency, 32-thread race, confirmation, injection, handoff, tracing, kill switch) |
+| A7 | PASS (narrowed) | every run is replayable from the local live cache (`data/cache`, not committed); the committed `cache/ci` holds what CI replays: one full tau2 simulation (`tests/test_replay_tau2.py`) and the whole regression suite; ledger in `results/ledger_summary.json` |
+| B1-B8 | PASS (after acceptance fixes) | `tests/service/` (38 tests). The codex acceptance review found and I fixed: exchange refunds bypassing limits (B5), confirmation not binding the amount/order version, the kill switch not stopping already-proposed cards, handoff leaving cards confirmable and empty summary fields (B7), confirm spans without outcome (B8) |
 | B9 | PASS | `cd web/widget && npm run check` (strict tsc, build, 3 node tests); served at `/widget` |
 | C1 | PASS | `scenarios/PROVENANCE.md`, `holdout.json` (hashes), `tests/test_scenarios.py` |
 | C2 | PASS (subset) | 20 of 100 scenarios run for 4 versions; dev/holdout split reported |
-| C3 | PASS | `results/flywheel/labels.jsonl`, `taxonomy.json` |
+| C3 | PASS | dev: `results/flywheel/labels.jsonl`, `taxonomy.json`; test failures labelled descriptively only in `test_labels_descriptive.jsonl` (never fed to cases or prompts) |
 | C4 | PASS | `tests/test_regression_gate.py`: gate passes v3, fails v1/v2/broken, replays offline |
-| C5 | PASS (n=10) | `results/judge_calibration.json` |
+| C5 | PASS (n=10) | `results/judge_calibration.json` (raw agreement and kappa, each with bootstrap CIs; disagreement + resolution) |
 | C6 | PASS | taxonomy by version on the dashboard |
 | D1-D4 | PASS | `make check`; `scripts/check_dashboard.py`; `tests/test_readme_numbers.py`; `scripts/check_docs.py` |
 
 Targets: pass^1 +5 pts -> **met** (+15, paired CI lower bound 0). Service B1-B9 all pass -> **met**. Policy-violation
-rate on holdout scenarios (deterministic) final < baseline -> **met** (0% vs 18% failing checks, n=11). Judge
+rate on holdout scenarios final < baseline -> **not demonstrated**: both are 0 (no leaks, no forbidden tool calls,
+no refunds above the expected amount). The baseline's two failing holdout checks (S040 missing handoff, C043
+incomplete exchange) are task-completion failures, not policy violations; v3 passes all 11. Judge
 kappa >= 0.6 -> **met on the point estimate** (0.74) but the CI (0-1) is too wide to rely on.

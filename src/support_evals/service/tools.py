@@ -173,7 +173,8 @@ class Tools:
                 raise ToolError("reason must be 'no longer needed' or 'ordered by mistake'")
             pm = o["payment_history"][0]["payment_method_id"]
             amount = round(sum(i["price"] for i in o["items"]), 2)
-            payload = {"order_id": oid, "reason": reason, "item_ids": sorted(items), "refund_to": pm}
+            payload = {"order_id": oid, "reason": reason, "item_ids": sorted(items), "refund_to": pm, "amount": amount,
+                       "order_version": self.store.order_version(oid)}
             return payload, f"Cancel order {oid} ({reason}); refund ${amount:.2f} to {pm}", amount
         item_ids = list(args.get("item_ids") or [])
         if not item_ids or len(set(item_ids)) != len(item_ids) or any(i not in items for i in item_ids):
@@ -189,7 +190,8 @@ class Tools:
             if pm not in original and not pm.startswith("gift_card"):
                 raise ToolError("refund must go to the original payment method or an existing gift card")
             amount = round(sum(items[i]["price"] for i in item_ids), 2)
-            payload = {"order_id": oid, "item_ids": sorted(item_ids), "payment_method_id": pm}
+            payload = {"order_id": oid, "item_ids": sorted(item_ids), "payment_method_id": pm, "amount": amount,
+                       "order_version": self.store.order_version(oid)}
             return payload, f"Return {len(item_ids)} item(s) from {oid}; refund ${amount:.2f} to {pm}", amount
         if name == "exchange_delivered_order_items":
             new_ids = list(args.get("new_item_ids") or [])
@@ -203,8 +205,10 @@ class Tools:
                     raise ToolError(f"{new} is not an available variant of the same product")
                 diff += var["price"] - items[old]["price"]
             diff = round(diff, 2)
-            payload = {"order_id": oid, "item_ids": item_ids, "new_item_ids": new_ids, "payment_method_id": pm}
-            refund = max(0.0, -diff)
+            refund = round(max(0.0, -diff), 2)
+            # the confirmed card binds the money: amount + price difference + order version are in the hash
+            payload = {"order_id": oid, "item_ids": item_ids, "new_item_ids": new_ids, "payment_method_id": pm,
+                       "amount": refund, "price_difference": diff, "order_version": self.store.order_version(oid)}
             return payload, f"Exchange {len(item_ids)} item(s) in {oid}; price difference ${diff:+.2f} via {pm}", refund
         raise ToolError(f"unknown write tool {name}")
 
@@ -256,6 +260,8 @@ class Tools:
                 c.execute("UPDATE pending_actions SET status='expired' WHERE action_id=?", (action_id,))
                 c.execute("COMMIT")
                 raise Conflict("action expired; propose it again")
+            if os.environ.get("SE_WRITES_ENABLED", "1") == "0":  # kill switch also stops already-proposed actions
+                raise Conflict("changes are temporarily paused")
             payload = json.loads(act["payload"])
             if sha(act["payload"]) != act["payload_hash"]:
                 raise Conflict("payload changed after proposal")
@@ -282,12 +288,24 @@ class Tools:
         want = "pending" if tool == "cancel_pending_order" else "delivered"
         if row["status"] != want:
             raise Conflict(f"order is now '{row['status']}'")
+        if p.get("order_version") is not None and row["version"] != p["order_version"]:
+            raise Conflict("order changed since the card was shown; propose again")
         ids = p["item_ids"]
         done = c.execute(f"SELECT item_id FROM refunds WHERE order_id=? AND item_id IN ({','.join('?' * len(ids))})",
                          (p["order_id"], *ids)).fetchall()
         if done:
             raise Conflict(f"already refunded: {[r['item_id'] for r in done]}")
-        amount = 0.0 if tool == "exchange_delivered_order_items" else round(sum(items[i]["price"] for i in ids), 2)
+        diffs: dict[str, float] = {}
+        if tool == "exchange_delivered_order_items":
+            for old, new in zip(p["item_ids"], p["new_item_ids"], strict=True):
+                prod = json.loads(c.execute("SELECT doc FROM products WHERE product_id=?",
+                                            (items[old]["product_id"],)).fetchone()["doc"])
+                diffs[old] = round(prod["variants"][new]["price"] - items[old]["price"], 2)
+            amount = round(max(0.0, -sum(diffs.values())), 2)
+        else:
+            amount = round(sum(items[i]["price"] for i in ids), 2)
+        if "amount" in p and abs(amount - p["amount"]) > 0.005:
+            raise Conflict(f"amount changed since confirmation (${p['amount']:.2f} -> ${amount:.2f}); propose again")
         today = c.execute("SELECT COALESCE(SUM(amount),0) s FROM refunds WHERE user_id=? AND created_at >= date('now')",
                           (principal,)).fetchone()["s"]
         if amount > AUTO_REFUND_LIMIT or today + amount > DAILY_REFUND_LIMIT:
@@ -303,10 +321,12 @@ class Tools:
                       "exchange_delivered_order_items": "exchange requested"}[tool]
         if tool == "exchange_delivered_order_items":
             for old, new in zip(p["item_ids"], p["new_item_ids"], strict=True):
-                prod = json.loads(c.execute("SELECT doc FROM products WHERE product_id=?",
-                                            (items[old]["product_id"],)).fetchone()["doc"])
-                diff = round(prod["variants"][new]["price"] - items[old]["price"], 2)
-                c.execute("INSERT INTO exchanges VALUES (?,?,?,?,?)", (p["order_id"], old, new, diff, action_id))
+                c.execute("INSERT INTO exchanges VALUES (?,?,?,?,?)", (p["order_id"], old, new, diffs[old], action_id))
+            if amount > 0:  # net price difference owed to the customer goes through the same refund ledger
+                c.execute("INSERT INTO refunds (order_id, item_id, user_id, amount, payment_method_id, kind, status,"
+                          " action_id) VALUES (?,?,?,?,?,?,?,?)",
+                          (p["order_id"], p["item_ids"][0], principal, amount, p["payment_method_id"],
+                           "exchange_difference", "pending_receipt", action_id))
         else:
             pm = p.get("refund_to") or p["payment_method_id"]
             kind = "cancel" if tool == "cancel_pending_order" else "return"

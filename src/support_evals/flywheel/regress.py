@@ -111,7 +111,12 @@ def fingerprint(version: str) -> str:
     from support_evals.service.agent import VERSIONS, system_prompt
 
     note = NATIVE_TOOLS_NOTE if VERSIONS[version].get("interface_fix") else ""
-    return hashlib.sha256((system_prompt(version) + note).encode()).hexdigest()[:16]
+    # Covers the prompt, the adapter note, the tool schemas and the reviewed case file: changing any of them makes
+    # the committed report stale and the gate fails until the suite is re-run.
+    from support_evals.service.agent import SCHEMAS
+
+    blob = system_prompt(version) + note + json.dumps(SCHEMAS, sort_keys=True) + CASES.read_text()
+    return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
 def run(version: str, tau2_agent: str = "policy_agent", only_approved: bool = True) -> dict[str, Any]:

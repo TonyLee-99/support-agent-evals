@@ -11,7 +11,7 @@ production-shaped service around it cannot double-refund or act on another custo
 
 | business problem | what I built | measured results |
 |---|---|---|
-| A retailer wants a bot for returns/exchanges/cancellations but cannot tell whether it is safe or improving | Policy agent (checklist prompt + code guards) on tau2-bench; FastAPI chat service + TS widget with confirmation cards, idempotent refunds, ownership checks, handoff queue, traces; eval flywheel (taxonomy -> clusters -> regression cases -> CI gate) | tau2 retail test subset (10 tasks, k=2, Haiku 5.5): pass^1 **85%** vs **70%** baseline (paired +15 pts, CI 0 to +30); pass^2 **80%** vs **50%**. Service: 32 deterministic acceptance tests incl. a 32-thread double-refund race (exactly 1 refund). Own scenarios (20): deterministic checks 90% -> **100%**, judge pass 35% -> **80%** (baseline -> shipped v3) |
+| A retailer wants a bot for returns/exchanges/cancellations but cannot tell whether it is safe or improving | Policy agent (checklist prompt + code guards) on tau2-bench; FastAPI chat service + TS widget with confirmation cards, idempotent refunds, ownership checks, handoff queue, traces; eval flywheel (taxonomy -> clusters -> regression cases -> CI gate) | tau2 retail test subset (10 tasks, k=2, Haiku 5.5): pass^1 **85%** vs **70%** baseline (paired +15 pts, CI 0 to +30); pass^2 **80%** vs **50%**. Service: 38 deterministic acceptance tests incl. a 32-thread double-refund race (exactly 1 refund). Own scenarios (20): deterministic checks 90% -> **100%**, judge pass 35% -> **80%** (baseline -> shipped v3) |
 
 ## Architecture
 
