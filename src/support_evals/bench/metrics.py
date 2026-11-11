@@ -49,7 +49,7 @@ def pass_hat_k_task(c: int, n: int, k: int) -> float:
 
 
 def pass_hat_k(by_task: dict[str, list[int]], k: int, tasks: list[str] | None = None) -> np.ndarray:
-    tasks = tasks or sorted(by_task, key=lambda t: int(t) if t.isdigit() else t)
+    tasks = tasks if tasks is not None else sorted(by_task, key=lambda t: int(t) if t.isdigit() else t)
     return np.array([pass_hat_k_task(sum(by_task[t]), len(by_task[t]), k) for t in tasks])
 
 
@@ -83,6 +83,8 @@ def paired(a: dict[str, list[int]], b: dict[str, list[int]], k: int) -> dict[str
     """b minus a on the common tasks; paired bootstrap over tasks."""
     tasks = sorted((t for t in set(a) & set(b) if len(a[t]) >= k and len(b[t]) >= k),
                    key=lambda t: int(t) if t.isdigit() else t)
+    if not tasks:
+        return {"k": k, "n_tasks": 0}
     va, vb = pass_hat_k(a, k, tasks), pass_hat_k(b, k, tasks)
     d = vb - va
     lo, hi = bootstrap_ci(d)

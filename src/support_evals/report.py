@@ -209,6 +209,32 @@ def round3() -> None:
             "native Messages-API tool_use, one call per turn") for d in DIFFS]
         out["test"] = t
     out["wrapper_test40_invalid"] = {r: invalid_rate(r) for r in ("llm_agent_test40_api", "policy_agent_test40_api")}
+    # Amendment 1 gate: r3 vs llm_agent on devplus (40 non-test tasks), k=2, same CLI interface
+    a, b = R / "tau2" / "llm_agent_devplus_k2", R / "tau2" / "policy_agent_r3_devplus_k2"
+    if (a / "sims.jsonl.gz").exists() and (b / "sims.jsonl.gz").exists():
+        ba, bb = successes_by_task(load_sims(a)), successes_by_task(load_sims(b))
+        d1 = paired(ba, bb, 1)
+        out["gate"] = {"split": "devplus (40 tasks, none in test)", "k": 2,
+                       "baseline": summarize(ba, [1, 2]), "policy_agent_r3": summarize(bb, [1, 2]),
+                       "paired_pass^1": d1, "paired_pass^2": paired(ba, bb, 2),
+                       "rule": "GO iff paired pass^1 lift >= +0.08 and CI lower bound > 0",
+                       "verdict": "GO" if d1["diff"] >= 0.08 and d1["ci95"][0] > 0 else "NO-GO"}
+    # native cost per simulation, measured on the dev check (agent + user sim + NL grader)
+    import glob as _g
+    cost = 0.0
+    for f in _g.glob(str(ROOT / "data/cache/*.jsonl")):
+        for line in open(f):
+            r = json.loads(line)
+            if r["meta"].get("backend") == "anthropic_native":
+                cost += r["response"].get("cost_usd", 0.0)
+    nat = [x for x in ("native_smoke", "llm_agent_dev10_native") if (R / "tau2" / x / "sims.jsonl.gz").exists()]
+    n_sims = sum(len(load_sims(R / "tau2" / x)) for x in nat)
+    if n_sims:
+        per = cost / n_sims
+        out["native_cost_estimate"] = {
+            "measured_usd_per_sim_baseline": round(per, 5), "assumed_policy_overhead": 1.15,
+            "test_run_usd": {f"K={k}": round(40 * k * per * (1 + 1.15), 2) for k in (2, 3, 4)},
+            "note": "both agents, 40 tasks; policy agent assumed 15% more calls (guard retries); excl. NL grader"}
     (R / "round3_summary.json").write_text(json.dumps(out, indent=1))
     print(json.dumps({k: (v.get("pass^1"), v["invalid"]) for k, v in out["dev"].items()}))
     if out["test"]:
