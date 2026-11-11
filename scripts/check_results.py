@@ -15,11 +15,11 @@ def tau2_test() -> bool:
     s = json.loads((R / "tau2_test_summary.json").read_text())
     ok = True
     n = s["runs"]["baseline"]["n_tasks"]
-    k = s["runs"]["baseline"]["n_trials_min"]
+    k = s["runs"]["baseline"]["n_trials_max"]
     for name, run in (("baseline", f"llm_agent_test{n}_api"), ("policy_agent", f"policy_agent_test{n}_api")):
         fresh = summarize(successes_by_task(load_sims(R / "tau2" / run)), list(range(1, k + 1)))
         ok &= all(fresh[f"pass^{j}"] == s["runs"][name][f"pass^{j}"] for j in range(1, k + 1))
-        ok &= fresh["n_tasks"] == n and fresh["n_trials_min"] == k
+        ok &= fresh["n_tasks"] == n and fresh["n_trials_max"] == k
         ok &= s["runs"][name]["config"]["split"] == "test"
     frozen = set(json.loads((R / "splits/frozen_test.json").read_text())["task_ids"])
     ok &= set(s["runs"]["baseline"]["config"]["task_ids"]) <= frozen

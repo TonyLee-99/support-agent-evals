@@ -3,24 +3,28 @@
   "baseline": {
    "n_tasks": 10,
    "n_trials_min": 1,
+   "n_trials_max": 1,
    "n_sims": 10,
    "pass^1": {
     "mean": 0.6,
     "ci95": [
      0.3,
      0.9
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "db_only": {
     "n_tasks": 10,
     "n_trials_min": 1,
+    "n_trials_max": 1,
     "n_sims": 10,
     "pass^1": {
      "mean": 0.8,
      "ci95": [
       0.5,
       1.0
-     ]
+     ],
+     "n_tasks_used": 10
     }
    },
    "mean_wall_s": 280.5,
@@ -68,24 +72,28 @@
   "policy_agent": {
    "n_tasks": 10,
    "n_trials_min": 1,
+   "n_trials_max": 1,
    "n_sims": 10,
    "pass^1": {
     "mean": 0.8,
     "ci95": [
      0.5,
      1.0
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "db_only": {
     "n_tasks": 10,
     "n_trials_min": 1,
+    "n_trials_max": 1,
     "n_sims": 10,
     "pass^1": {
      "mean": 0.8,
      "ci95": [
       0.5,
       1.0
-     ]
+     ],
+     "n_tasks_used": 10
     }
    },
    "mean_wall_s": 196.2,

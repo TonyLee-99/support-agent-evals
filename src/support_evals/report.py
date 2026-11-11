@@ -64,7 +64,9 @@ DIFFS = [
 
 def tau2() -> None:
     # the 10x2 run is kept as history; the headline is the largest completed run
-    sizes = [(10, 2)] + ([(40, 3)] if (R / "tau2" / "policy_agent_test40_api" / "sims.jsonl.gz").exists() else [])
+    sizes = [(10, 2)] + ([(40, 3)] if (R / "tau2" / "policy_agent_test40_api" / "meta.json").exists() and
+                         2 in json.loads((R / "tau2" / "policy_agent_test40_api" / "meta.json").read_text())["trials"]
+                         else [])
     for n, k in sizes:
         test = tau2_pair(f"llm_agent_test{n}_api", f"policy_agent_test{n}_api", k)
         test["differences_from_leaderboard"] = [d.format(n=n, k=k) for d in DIFFS]

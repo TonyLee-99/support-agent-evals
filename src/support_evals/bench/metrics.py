@@ -62,21 +62,27 @@ def bootstrap_ci(values: np.ndarray, n_boot: int = N_BOOT, seed: int = SEED) -> 
 
 
 def summarize(by_task: dict[str, list[int]], ks: list[int]) -> dict[str, Any]:
+    """pass^k uses each task's own trial count n (C(c,k)/C(n,k) is unbiased for any n >= k); a task with fewer
+    than k completed trials (a discarded simulation) is left out of pass^k and counted in n_tasks_used."""
     n_trials = min(len(v) for v in by_task.values())
-    out: dict[str, Any] = {"n_tasks": len(by_task), "n_trials_min": n_trials,
+    n_max = max(len(v) for v in by_task.values())
+    out: dict[str, Any] = {"n_tasks": len(by_task), "n_trials_min": n_trials, "n_trials_max": n_max,
                            "n_sims": sum(len(v) for v in by_task.values())}
     for k in ks:
-        if k > n_trials:
+        tasks = [t for t, v in by_task.items() if len(v) >= k]
+        if not tasks:
             continue
-        v = pass_hat_k(by_task, k)
+        v = pass_hat_k(by_task, k, sorted(tasks, key=lambda t: int(t) if t.isdigit() else t))
         lo, hi = bootstrap_ci(v)
-        out[f"pass^{k}"] = {"mean": round(float(v.mean()), 4), "ci95": [round(lo, 4), round(hi, 4)]}
+        out[f"pass^{k}"] = {"mean": round(float(v.mean()), 4), "ci95": [round(lo, 4), round(hi, 4)],
+                            "n_tasks_used": len(tasks)}
     return out
 
 
 def paired(a: dict[str, list[int]], b: dict[str, list[int]], k: int) -> dict[str, Any]:
     """b minus a on the common tasks; paired bootstrap over tasks."""
-    tasks = sorted(set(a) & set(b), key=lambda t: int(t) if t.isdigit() else t)
+    tasks = sorted((t for t in set(a) & set(b) if len(a[t]) >= k and len(b[t]) >= k),
+                   key=lambda t: int(t) if t.isdigit() else t)
     va, vb = pass_hat_k(a, k, tasks), pass_hat_k(b, k, tasks)
     d = vb - va
     lo, hi = bootstrap_ci(d)

@@ -1,0 +1,325 @@
+{
+ "runs": {
+  "baseline": {
+   "n_tasks": 40,
+   "n_trials_min": 2,
+   "n_trials_max": 3,
+   "n_sims": 119,
+   "pass^1": {
+    "mean": 0.825,
+    "ci95": [
+     0.7333,
+     0.9167
+    ],
+    "n_tasks_used": 40
+   },
+   "pass^2": {
+    "mean": 0.7417,
+    "ci95": [
+     0.6167,
+     0.8667
+    ],
+    "n_tasks_used": 40
+   },
+   "pass^3": {
+    "mean": 0.6923,
+    "ci95": [
+     0.5385,
+     0.8205
+    ],
+    "n_tasks_used": 39
+   },
+   "db_only": {
+    "n_tasks": 40,
+    "n_trials_min": 2,
+    "n_trials_max": 3,
+    "n_sims": 119,
+    "pass^1": {
+     "mean": 0.8333,
+     "ci95": [
+      0.7417,
+      0.9167
+     ],
+     "n_tasks_used": 40
+    },
+    "pass^2": {
+     "mean": 0.7583,
+     "ci95": [
+      0.6333,
+      0.875
+     ],
+     "n_tasks_used": 40
+    },
+    "pass^3": {
+     "mean": 0.7179,
+     "ci95": [
+      0.5897,
+      0.8462
+     ],
+     "n_tasks_used": 39
+    }
+   },
+   "mean_wall_s": 38.3,
+   "termination": {
+    "user_stop": 119
+   },
+   "config": {
+    "agent": "llm_agent",
+    "agent_model": "claude-haiku-5-5",
+    "user_model": "claude-haiku-5-5",
+    "nl_judge_model": "claude-haiku-5-5",
+    "backend": "anthropic Messages API (respond tool, cached system prefix; CLI fallback over budget)",
+    "tau2_commit": "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4",
+    "split": "test",
+    "task_ids": [
+     "5",
+     "9",
+     "12",
+     "17",
+     "18",
+     "26",
+     "27",
+     "32",
+     "33",
+     "36",
+     "38",
+     "39",
+     "40",
+     "42",
+     "45",
+     "49",
+     "51",
+     "53",
+     "55",
+     "56",
+     "60",
+     "61",
+     "62",
+     "64",
+     "65",
+     "68",
+     "70",
+     "71",
+     "74",
+     "77",
+     "79",
+     "86",
+     "90",
+     "94",
+     "97",
+     "100",
+     "101",
+     "102",
+     "108",
+     "111"
+    ],
+    "trials": [
+     0,
+     1,
+     2
+    ]
+   },
+   "adapter_stats": {
+    "user:calls": 892,
+    "user:live": 734,
+    "agent:calls": 1711,
+    "agent:live": 1408,
+    "user:cached": 158,
+    "unknown:calls": 33,
+    "unknown:live": 25,
+    "agent:cached": 303,
+    "unknown:cached": 8,
+    "agent:adapter_unwrapped": 4,
+    "user:adapter_unwrapped": 21,
+    "agent:adapter_invalid": 31,
+    "agent:adapter_failed": 8
+   },
+   "discarded_sims": 2
+  },
+  "policy_agent": {
+   "n_tasks": 40,
+   "n_trials_min": 2,
+   "n_trials_max": 3,
+   "n_sims": 119,
+   "pass^1": {
+    "mean": 0.8042,
+    "ci95": [
+     0.7124,
+     0.8917
+    ],
+    "n_tasks_used": 40
+   },
+   "pass^2": {
+    "mean": 0.7083,
+    "ci95": [
+     0.5833,
+     0.8252
+    ],
+    "n_tasks_used": 40
+   },
+   "pass^3": {
+    "mean": 0.6667,
+    "ci95": [
+     0.5128,
+     0.8205
+    ],
+    "n_tasks_used": 39
+   },
+   "db_only": {
+    "n_tasks": 40,
+    "n_trials_min": 2,
+    "n_trials_max": 3,
+    "n_sims": 119,
+    "pass^1": {
+     "mean": 0.8125,
+     "ci95": [
+      0.7167,
+      0.9001
+     ],
+     "n_tasks_used": 40
+    },
+    "pass^2": {
+     "mean": 0.725,
+     "ci95": [
+      0.6083,
+      0.8417
+     ],
+     "n_tasks_used": 40
+    },
+    "pass^3": {
+     "mean": 0.6923,
+     "ci95": [
+      0.5385,
+      0.8462
+     ],
+     "n_tasks_used": 39
+    }
+   },
+   "mean_wall_s": 39.5,
+   "termination": {
+    "user_stop": 119
+   },
+   "config": {
+    "agent": "policy_agent",
+    "agent_model": "claude-haiku-5-5",
+    "user_model": "claude-haiku-5-5",
+    "nl_judge_model": "claude-haiku-5-5",
+    "backend": "anthropic Messages API (respond tool, cached system prefix; CLI fallback over budget)",
+    "tau2_commit": "c06b07dd7c4d4ec61ba6ff9bcdf0b15dd7ef36d4",
+    "split": "test",
+    "task_ids": [
+     "5",
+     "9",
+     "12",
+     "17",
+     "18",
+     "26",
+     "27",
+     "32",
+     "33",
+     "36",
+     "38",
+     "39",
+     "40",
+     "42",
+     "45",
+     "49",
+     "51",
+     "53",
+     "55",
+     "56",
+     "60",
+     "61",
+     "62",
+     "64",
+     "65",
+     "68",
+     "70",
+     "71",
+     "74",
+     "77",
+     "79",
+     "86",
+     "90",
+     "94",
+     "97",
+     "100",
+     "101",
+     "102",
+     "108",
+     "111"
+    ],
+    "trials": [
+     0,
+     1,
+     2
+    ]
+   },
+   "adapter_stats": {
+    "user:calls": 959,
+    "user:live": 791,
+    "agent:calls": 1740,
+    "agent:live": 1413,
+    "user:adapter_unwrapped": 31,
+    "user:cached": 168,
+    "agent:adapter_invalid": 28,
+    "agent:adapter_failed": 8,
+    "agent:cached": 327,
+    "unknown:calls": 35,
+    "unknown:live": 26,
+    "unknown:cached": 9,
+    "unknown:adapter_invalid": 1,
+    "agent:adapter_unwrapped": 1
+   },
+   "discarded_sims": 3
+  }
+ },
+ "comparison": {
+  "pass^1": {
+   "k": 1,
+   "n_tasks": 40,
+   "diff": -0.0208,
+   "ci95": [
+    -0.0833,
+    0.0417
+   ],
+   "tasks_better": 6,
+   "tasks_worse": 7,
+   "tasks_same": 27,
+   "p_boot_le_0": 0.7405
+  },
+  "pass^2": {
+   "k": 2,
+   "n_tasks": 40,
+   "diff": -0.0333,
+   "ci95": [
+    -0.1417,
+    0.075
+   ],
+   "tasks_better": 5,
+   "tasks_worse": 6,
+   "tasks_same": 29,
+   "p_boot_le_0": 0.739
+  },
+  "pass^3": {
+   "k": 3,
+   "n_tasks": 38,
+   "diff": -0.0526,
+   "ci95": [
+    -0.1842,
+    0.1053
+   ],
+   "tasks_better": 3,
+   "tasks_worse": 5,
+   "tasks_same": 30,
+   "p_boot_le_0": 0.8275
+  }
+ },
+ "differences_from_leaderboard": [
+  "agent model claude-haiku-5-5 (leaderboard: various)",
+  "user simulator claude-haiku-5-5 (leaderboard: gpt-4.1)",
+  "NL-assertion grader claude-haiku-5-5 (tau2 default: gpt-5.4-mini)",
+  "40 of the 40 official retail test tasks (frozen random order), k=3 (leaderboard: 114 tasks, k=4)",
+  "tool calling via a JSON 'respond' tool on the Messages API (not native per-tool function calling)"
+ ]
+}
