@@ -48,7 +48,13 @@ def tau2_pair(base: str, cand: str, k: int) -> dict[str, Any]:
         s["config"] = {key: m[key] for key in ("agent", "agent_model", "user_model", "nl_judge_model", "backend",
                                                "tau2_commit", "split", "task_ids", "trials")}
         s["adapter_stats"] = m.get("adapter_stats", {})
-        s["discarded_sims"] = len(m.get("errors", []))
+        # errors[] logs every failed *attempt* (a re-run of the same task/trial appends again); report both views
+        kept = {(x["task_id"], x["se_trial"]) for x in sims}
+        failed = [(e["task_id"], e["trial"]) for e in m.get("errors", [])]
+        s["failed_attempts"] = len(failed)
+        s["recovered_on_rerun"] = len({f for f in failed if f in kept})
+        s["missing_sims"] = sorted([list(f) for f in set(failed) - kept])
+        s["planned_sims"] = len(m["task_ids"]) * len(m["trials"])
         out["runs"][name] = s
     out["comparison"] = {f"pass^{j}": paired(by["baseline"], by["policy_agent"], j) for j in range(1, k + 1)}
     return out
@@ -94,8 +100,8 @@ def ablations() -> None:
         s = summarize(bt, [1])
         rows.append({"variant": label, "run": run, "n_tasks": s["n_tasks"], "pass^1": s["pass^1"],
                      "vs_full": paired(ref, bt, 1)})
-    (R / "ablations.json").write_text(json.dumps({"split": "dev (10 tasks, k=1)", "note": "exploratory: one trial, "
-                                                  "10 tasks; CIs are wide and no causal claim is made", "rows": rows},
+    (R / "ablations.json").write_text(json.dumps({"split": "dev (10 tasks, k=1)", "note": "directional only: 10 tasks x 1 trial; "
+                                                  "every CI includes 0 (e.g. minus planner -20 pts, CI -60 to +20)", "rows": rows},
                                                  indent=1))
     for r in rows:
         print(r["variant"], r.get("pass^1"))

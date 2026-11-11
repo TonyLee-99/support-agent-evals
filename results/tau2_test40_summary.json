@@ -134,7 +134,15 @@
     "agent:adapter_invalid": 31,
     "agent:adapter_failed": 8
    },
-   "discarded_sims": 2
+   "failed_attempts": 2,
+   "recovered_on_rerun": 0,
+   "missing_sims": [
+    [
+     "94",
+     2
+    ]
+   ],
+   "planned_sims": 120
   },
   "policy_agent": {
    "n_tasks": 40,
@@ -271,7 +279,15 @@
     "unknown:adapter_invalid": 1,
     "agent:adapter_unwrapped": 1
    },
-   "discarded_sims": 3
+   "failed_attempts": 3,
+   "recovered_on_rerun": 1,
+   "missing_sims": [
+    [
+     "27",
+     0
+    ]
+   ],
+   "planned_sims": 120
   }
  },
  "comparison": {

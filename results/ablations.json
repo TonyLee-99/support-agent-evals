@@ -1,6 +1,6 @@
 {
  "split": "dev (10 tasks, k=1)",
- "note": "exploratory: one trial, 10 tasks; CIs are wide and no causal claim is made",
+ "note": "directional only: 10 tasks x 1 trial; every CI includes 0 (e.g. minus planner -20 pts, CI -60 to +20)",
  "rows": [
   {
    "variant": "baseline (tau2 default)",
@@ -11,7 +11,8 @@
     "ci95": [
      0.3,
      0.9
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "vs_full": {
     "k": 1,
@@ -36,7 +37,8 @@
     "ci95": [
      0.5,
      1.0
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "vs_full": {
     "k": 1,
@@ -61,7 +63,8 @@
     "ci95": [
      0.3,
      0.9
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "vs_full": {
     "k": 1,
@@ -86,7 +89,8 @@
     "ci95": [
      0.5,
      1.0
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "vs_full": {
     "k": 1,
@@ -111,7 +115,8 @@
     "ci95": [
      0.4,
      1.0
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "vs_full": {
     "k": 1,
@@ -136,7 +141,8 @@
     "ci95": [
      0.5,
      1.0
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "vs_full": {
     "k": 1,
@@ -161,7 +167,8 @@
     "ci95": [
      0.5,
      1.0
-    ]
+    ],
+    "n_tasks_used": 10
    },
    "vs_full": {
     "k": 1,
