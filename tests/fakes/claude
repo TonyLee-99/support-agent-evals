@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""Fake `claude` CLI for tests. Behaviour controlled by FAKE_CLAUDE_MODE; echoes a structured reply."""
+import json, os, sys
+args = sys.argv[1:]
+prompt = sys.stdin.read()
+mode = os.environ.get("FAKE_CLAUDE_MODE", "ok")
+log = os.environ.get("FAKE_CLAUDE_LOG")
+if log:
+    with open(log, "a") as fh:
+        fh.write(json.dumps({"args": args, "prompt": prompt, "cwd": os.getcwd()}) + "\n")
+if mode == "limit":
+    print(json.dumps({"type": "result", "subtype": "success", "is_error": True, "result": "Claude AI usage limit reached|1762850000"}))
+    sys.exit(1)
+schema = json.loads(args[args.index("--json-schema") + 1]) if "--json-schema" in args else None
+if schema and "action" in schema.get("properties", {}):
+    so = {"action": "tool_call", "tool_call": {"name": schema["properties"]["tool_call"]["properties"]["name"]["enum"][0], "arguments": {"x": len(prompt)}}}
+elif schema:
+    so = {"message": "hello from fake"}
+else:
+    so = None
+out = {"type": "result", "subtype": "success", "is_error": False, "result": json.dumps(so) if so else "plain text",
+       "usage": {"input_tokens": 10, "output_tokens": 5, "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0},
+       "total_cost_usd": 0.001, "num_turns": 1}
+if so is not None:
+    out["structured_output"] = so
+print(json.dumps(out))
