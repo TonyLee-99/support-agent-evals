@@ -67,7 +67,10 @@
     "user:live": 89,
     "unknown:live": 4
    },
-   "discarded_sims": 0
+   "failed_attempts": 0,
+   "recovered_on_rerun": 0,
+   "missing_sims": [],
+   "planned_sims": 10
   },
   "policy_agent": {
    "n_tasks": 10,
@@ -136,7 +139,10 @@
     "agent:live": 112,
     "unknown:live": 2
    },
-   "discarded_sims": 0
+   "failed_attempts": 0,
+   "recovered_on_rerun": 0,
+   "missing_sims": [],
+   "planned_sims": 10
   }
  },
  "comparison": {
